@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../firebase"; // настроенный Firebase
+import { storage, auth } from "../firebase"; // auth добавлен для получения текущего пользователя
 
 function BoardPage() {
   const { id } = useParams();
@@ -11,7 +11,6 @@ function BoardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Загрузка постов
   const loadPosts = async () => {
     try {
       const res = await fetch(`http://localhost:3000/api/posts?boardId=${id}`);
@@ -26,21 +25,27 @@ function BoardPage() {
     loadPosts();
   }, [id]);
 
-  // Создание нового поста
   const createPost = async () => {
     if (!text && !file) return;
     setLoading(true);
     setError("");
 
     let imageUrl = null;
+
     try {
       if (file) {
-        const fileRef = ref(storage, `images/${Date.now()}_${file.name}`);
+        const fileRef = ref(storage, `images/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
         await uploadBytes(fileRef, file);
         imageUrl = await getDownloadURL(fileRef);
       }
 
-      const newPostData = { boardId: id, text, imageUrl };
+      const newPostData = {
+        boardId: id,
+        text,
+        imageUrl,
+        userId: auth.currentUser.uid,
+        userEmail: auth.currentUser.email
+      };
 
       const res = await fetch(`http://localhost:3000/api/posts`, {
         method: 'POST',
@@ -54,13 +59,12 @@ function BoardPage() {
       setFile(null);
     } catch (err) {
       console.log("Post creation error:", err);
-      setError("Failed to send post. Check Firebase rules or network.");
+      setError("Failed to send post.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Удаление поста
   const deletePost = async (postId) => {
     try {
       await fetch(`http://localhost:3000/api/posts/${postId}`, { method: 'DELETE' });
@@ -91,10 +95,13 @@ function BoardPage() {
 
       <ul>
         {posts.map(p => (
-          <li key={p.id} style={{ marginBottom: "10px" }}>
+          <li key={p.id} style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
+            <b>{p.userEmail}</b><br />
             {p.text} <br />
             {p.imageUrl && <img src={p.imageUrl} alt="" width="200" />} <br />
-            <button onClick={() => deletePost(p.id)}>Delete</button>
+            {auth.currentUser?.uid === p.userId && (
+              <button onClick={() => deletePost(p.id)}>Delete</button>
+            )}
           </li>
         ))}
       </ul>

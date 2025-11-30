@@ -6,6 +6,16 @@ console.log('Starting server...');
 const app = express();
 const PORT = 3000;
 
+const admin = require('firebase-admin');
+const serviceAccount = require('./serviceAccountKey.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: "my-student-network-backend.firebasestorage.app"
+});
+
+const bucket = admin.storage().bucket();
+
 // middlewares
 app.use(cors());
 app.use(express.json());
@@ -32,13 +42,15 @@ app.get('/api/posts', (req, res) => {
 
 // создать пост
 app.post('/api/posts', (req, res) => {
-  const { boardId, text, imageUrl } = req.body;
+  const { boardId, text, imageUrl, userId, userEmail } = req.body;
 
   const newPost = {
     id: posts.length + 1,
     boardId: Number(boardId),
     text,
-    imageUrl: imageUrl || null
+    imageUrl: imageUrl || null,
+    userId,
+    userEmail
   };
 
   posts.push(newPost);
@@ -46,9 +58,32 @@ app.post('/api/posts', (req, res) => {
 });
 
 // удалить пост по id
-app.delete('/api/posts/:id', (req, res) => {
+app.delete('/api/posts/:id', async (req, res) => {
   const postId = Number(req.params.id);
+  const post = posts.find(p => p.id === postId);
+
+  if (!post) return res.status(404).json({ error: "Post not found" });
+
+  // Удаление картинки из Firebase
+  if (post.imageUrl) {
+    try {
+      const urlPart = post.imageUrl.split("/o/")[1]?.split("?")[0];
+      if (urlPart) {
+        const filePath = decodeURIComponent(urlPart);
+        console.log("Trying to delete file:", filePath);
+        await bucket.file(filePath).delete();
+        console.log("Image deleted from Firebase:", filePath);
+      } else {
+        console.log("Image URL format invalid, skipping delete");
+      }
+    } catch (err) {
+      console.log("Image delete error:", err);
+    }
+  }
+
+  // Удаляем пост из массива
   posts = posts.filter(p => p.id !== postId);
+
   res.json({ success: true });
 });
 

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage, auth } from "../firebase"; // auth добавлен для получения текущего пользователя
+import { storage, auth } from "../firebase";
+
+import "./BoardPage.css";
 
 function BoardPage() {
   const { id } = useParams();
@@ -76,36 +78,45 @@ function BoardPage() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Board #{id}</h2>
+    <div className="board-container">
+  <h2 className="board-title">Board #{id}</h2>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+  {error && <p className="error-text">{error}</p>}
 
-      <input
-        value={text}
-        onChange={e => setText(e.target.value)}
-        placeholder="Write a post..."
-      /><br/>
+  <div className="create-box">
+    <input
+      value={text}
+      onChange={e => setText(e.target.value)}
+      placeholder="Write a post..."
+      type="text"
+    />
 
-      <input type="file" onChange={e => setFile(e.target.files[0])} /><br/>
+    <input
+      type="file"
+      onChange={e => setFile(e.target.files[0])}
+    />
 
-      <button onClick={createPost} disabled={loading}>
-        {loading ? "Sending..." : "Send"}
-      </button>
+    <button onClick={createPost} disabled={loading} className="create-btn">
+      {loading ? "Sending..." : "Send"}
+    </button>
+  </div>
 
-      <ul>
-        {posts.map(p => (
-          <li key={p.id} style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
-            <b>{p.userEmail}</b><br />
-            {p.text} <br />
-            {p.imageUrl && <img src={p.imageUrl} alt="" width="200" />} <br />
-            {auth.currentUser?.uid === p.userId && (
-              <button onClick={() => deletePost(p.id)}>Delete</button>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
+  <ul className="posts-grid">
+    {posts.map(p => (
+      <li key={p.id} className="post-card">
+        <b>{p.userEmail}</b>
+        <p className="post-text">{p.text}</p>
+        {p.imageUrl && <img src={p.imageUrl} alt="" className="post-image" />}
+
+        {auth.currentUser?.uid === p.userId && (
+          <button className="delete-btn" onClick={() => deletePost(p.id)}>
+            Delete
+          </button>
+        )}
+      </li>
+    ))}
+  </ul>
+</div>
   );
 }
 

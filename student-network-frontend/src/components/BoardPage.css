@@ -1,0 +1,131 @@
+/* ===== Основной контейнер ===== */
+.board-container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: "Inter", sans-serif;
+  }
+  
+  /* ===== Заголовок ===== */
+  .board-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #5c4b8c;
+    margin-bottom: 20px;
+  }
+  
+  /* ===== Форма создания поста ===== */
+  .create-box {
+    background: rgba(93, 66, 147, 0.08);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(93, 66, 147, 0.15);
+    padding: 16px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+  }
+  
+  .create-box input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(93, 66, 147, 0.25);
+    margin-bottom: 12px;
+    font-size: 15px;
+    outline: none;
+  }
+  
+  .create-box input[type="file"] {
+    margin-bottom: 12px;
+  }
+  
+  .create-btn {
+    background: #6d58b6;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  
+  .create-btn:hover {
+    background: #7f6add;
+  }
+  
+  /* ===== Сетка постов ===== */
+  .posts-grid {
+    margin-top: 10px;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  /* ===== Каждая карточка поста ===== */
+  .post-card {
+    background: white;
+    border: 1px solid rgba(93, 66, 147, 0.15);
+    padding: 16px;
+    border-radius: 18px;
+    box-shadow: 0 4px 10px rgba(98, 61, 158, 0.08);
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  
+  .post-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(98, 61, 158, 0.12);
+  }
+  
+  .post-card b {
+    color: #5a4a90;
+    font-size: 14px;
+  }
+  
+  /* ===== Текст поста ===== */
+  .post-text {
+    margin-top: 6px;
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: #333;
+  }
+  
+  /* ===== Фотографии ===== */
+  .post-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-top: 8px;
+  }
+  
+  /* ===== Кнопка удаления ===== */
+  .delete-btn {
+    margin-top: 10px;
+    padding: 6px 14px;
+    font-size: 13px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: rgba(255, 0, 0, 0.08);
+    color: #c0392b;
+    transition: 0.15s;
+  }
+  
+  .delete-btn:hover {
+    background: rgba(255, 0, 0, 0.18);
+  }
+  
+  /* ===== Ошибки ===== */
+  .error-text {
+    color: #e74c3c;
+    margin-bottom: 10px;
+  }
+  
+  /* ===== Адаптация под мобилку ===== */
+  @media (max-width: 600px) {
+    .post-card {
+      padding: 14px;
+    }
+  }

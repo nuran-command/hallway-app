@@ -4,15 +4,17 @@ import Boards from './components/Boards';
 import BoardPage from './components/BoardPage';
 import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar/Sidebar';
-import { ThemeProvider, useTheme } from './themeStore';
+import { useTheme, ThemeProvider } from './themeStore';
 import './theme.css';
+import './App.css';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 
-function AppContent() {
+export default function App() {
   const [boards, setBoards] = React.useState([]);
   const [user, setUser] = React.useState(null);
   const [loadingUser, setLoadingUser] = React.useState(true);
+  const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const { theme } = useTheme();
 
   React.useEffect(() => {
@@ -20,11 +22,11 @@ function AppContent() {
   }, [theme]);
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsub = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoadingUser(false);
     });
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
 
   React.useEffect(() => {
@@ -41,9 +43,10 @@ function AppContent() {
   if (loadingUser) return <p>Loading...</p>;
 
   return (
-    <div style={{ display: 'flex' }}>
-      {user && <Sidebar />}
-      <div style={{ marginLeft: user ? 230 : 0, padding: '20px', flexGrow: 1 }}>
+    <div className={`app-wrapper ${sidebarOpen ? "sidebar-open" : ""}`}>
+      {user && <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />}
+
+      <main className={`content ${sidebarOpen ? "with-sidebar" : ""}`}>
         <Routes>
           {!user ? (
             <Route path="*" element={<LoginPage onLogin={setUser} />} />
@@ -55,21 +58,22 @@ function AppContent() {
             </>
           )}
         </Routes>
+      </main>
 
-        {user && (
-          <button style={{ position: 'fixed', bottom: 20, right: 20 }} onClick={handleLogout}>
-            Logout
-          </button>
-        )}
-      </div>
+      {user && (
+        <button className="logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
+      )}
     </div>
   );
 }
 
-export default function App() {
+// Wrap with ThemeProvider in index.js
+export function AppWrapper() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <App />
     </ThemeProvider>
   );
 }

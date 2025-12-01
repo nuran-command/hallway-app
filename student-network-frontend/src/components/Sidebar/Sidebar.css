@@ -1,0 +1,39 @@
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 220px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    padding: 10px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+  }
+  
+  .sidebar.closed {
+    transform: translateX(-200px);
+  }
+  
+  .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .sidebar-logo {
+    width: 40px;
+    border-radius: 10px;
+  }
+  
+  .sidebar-content {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .sidebar-avatar {
+    font-size: 40px;
+  }

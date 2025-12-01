@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { auth } from '../firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
+} from "firebase/auth";
+
 import "./LoginPage.css";
 
 function LoginPage({ onLogin }) {
@@ -10,49 +14,57 @@ function LoginPage({ onLogin }) {
 
   const login = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      onLogin(userCredential.user);
+      setError("");
+      const res = await signInWithEmailAndPassword(auth, email, password);
+      onLogin(res.user);
     } catch (err) {
-      setError(err.message);
+      setError(err.code.replace("auth/", "").replace(/-/g, " "));
     }
   };
 
   const register = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      onLogin(userCredential.user);
+      setError("");
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      onLogin(res.user);
     } catch (err) {
-      setError(err.message);
+      setError(err.code.replace("auth/", "").replace(/-/g, " "));
     }
   };
 
   return (
     <div className="login-page">
       <div className="login-box">
-        <h2 className="login-title">Login / Register</h2>
 
-        {error && <p className="error-text">{error}</p>}
+        <h2 className="login-title">Welcome</h2>
 
-        <input
-          type="email"
-          className="login-input"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
+        {error && <div className="error-text">{error}</div>}
 
-        <input
-          type="password"
-          className="login-input"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
+        <div className="input-group">
+          <input
+            type="email"
+            className="login-input"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+        </div>
+
+        <div className="input-group">
+          <input
+            type="password"
+            className="login-input"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+        </div>
 
         <div className="login-buttons">
           <button className="login-btn" onClick={login}>Login</button>
           <button className="register-btn" onClick={register}>Register</button>
         </div>
+
       </div>
     </div>
   );

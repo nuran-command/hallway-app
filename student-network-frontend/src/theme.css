@@ -1,0 +1,43 @@
+:root {
+    --bg-color: #ffffff;
+    --text-color: #333333;
+    --card-bg: #f9f9f9;
+    --accent-color: #7b5fff; /* нежный фиолетовый */
+  }
+  
+  [data-theme="dark"] {
+    --bg-color: #1e1e2f;
+    --text-color: #e0e0e0;
+    --card-bg: #2a2a3d;
+    --accent-color: #a584ff;
+  }
+  
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+  }
+  
+  button {
+    cursor: pointer;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background-color: var(--accent-color);
+    color: white;
+    transition: 0.3s;
+  }
+  
+  button:hover {
+    opacity: 0.8;
+  }
+  
+  .post-card {
+    background-color: var(--card-bg);
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+  }

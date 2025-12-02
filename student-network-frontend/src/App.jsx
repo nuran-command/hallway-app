@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import Dashboard from './components/Dashboard';
 import Boards from './components/Boards';
 import BoardPage from './components/BoardPage';
 import LoginPage from './components/LoginPage';
@@ -22,7 +23,7 @@ export default function App() {
   }, [theme]);
 
   React.useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
+    const unsub = onAuthStateChanged(auth, currentUser => {
       setUser(currentUser);
       setLoadingUser(false);
     });
@@ -52,7 +53,8 @@ export default function App() {
             <Route path="*" element={<LoginPage onLogin={setUser} />} />
           ) : (
             <>
-              <Route path="/" element={<Boards boards={boards} />} />
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/boards" element={<Boards boards={boards} />} />
               <Route path="/board/:id" element={<BoardPage />} />
               <Route path="*" element={<Navigate to="/" />} />
             </>
@@ -69,7 +71,6 @@ export default function App() {
   );
 }
 
-// Wrap with ThemeProvider in index.js
 export function AppWrapper() {
   return (
     <ThemeProvider>

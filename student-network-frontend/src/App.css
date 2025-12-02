@@ -3,27 +3,28 @@
     width: 100%;
   }
   
-  /* Content area */
+  /* MAIN CONTENT */
   .content {
     flex-grow: 1;
     padding: 20px;
     width: 100%;
+    padding-top: 70px; /* fixes overlap with toggle button */
     transition: margin-left 0.25s ease;
   }
   
-  /* Desktop: shift content when sidebar is open */
+  /* DESKTOP — shift content when sidebar open */
   .app-wrapper.sidebar-open .content {
     margin-left: 220px;
   }
   
-  /* Mobile: content remains full width */
-  @media (max-width: 767px) {
+  /* MOBILE — content full width */
+  @media (max-width: 768px) {
     .app-wrapper.sidebar-open .content {
       margin-left: 0 !important;
     }
   }
   
-  /* Logout button */
+  /* LOGOUT BUTTON */
   .logout-btn {
     position: fixed;
     bottom: 20px;
@@ -41,18 +42,4 @@
   
   .logout-btn:hover {
     background: #7f6add;
-  }
-  
-  /* Optional: always visible toggle button */
-  .sidebar-toggle-global {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 2000;
-    background: var(--card-bg);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 20px;
-    cursor: pointer;
   }

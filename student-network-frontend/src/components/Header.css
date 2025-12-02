@@ -1,0 +1,38 @@
+.header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  
+    background: rgba(118, 84, 190, 0.15);
+    padding: 14px 26px;
+    border-bottom: 1px solid rgba(118, 84, 190, 0.25);
+    backdrop-filter: blur(4px);
+  }
+  
+  .header-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #4f3b84;
+    margin: 0;
+  }
+  
+  .header-user {
+    color: #4f3b84;
+    font-size: 14px;
+    margin-right: 12px;
+  }
+  
+  .header-btn {
+    padding: 8px 14px;
+    background: #6d58b6;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  
+  .header-btn:hover {
+    background: #7f6add;
+  }

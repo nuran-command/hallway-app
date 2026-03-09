@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import HallwayLogo from './HallwayLogo';
 import { auth } from '../firebase';
 import {
   signInWithEmailAndPassword,
@@ -37,13 +38,7 @@ function LoginPage({ onLogin }) {
       <div className="login-box">
         <div className="login-header">
           <div className="login-logo">
-            <svg viewBox="0 0 100 100" width="40" height="40">
-              <rect x="10" y="10" width="80" height="80" fill="none" stroke="currentColor" strokeWidth="4" />
-              <path d="M10 10 L50 40 L90 10" fill="none" stroke="currentColor" strokeWidth="4" />
-              <path d="M10 90 L50 60 L90 90" fill="none" stroke="currentColor" strokeWidth="4" />
-              <rect x="40" y="40" width="20" height="30" fill="currentColor" opacity="0.8" />
-              <circle cx="50" cy="5" r="3" fill="#fbbf24" />
-            </svg>
+            <HallwayLogo size={60} />
           </div>
           <h2 className="login-title">HallWay</h2>
           <p className="login-subtitle">Step into your community</p>

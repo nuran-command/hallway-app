@@ -87,6 +87,19 @@ app.delete('/api/posts/:id', async (req, res) => {
   res.json({ success: true });
 });
 
+// получить статистику пользователя
+app.get('/api/user-stats/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const userPosts = posts.filter(p => p.userId === userId);
+  const activeBoards = new Set(userPosts.map(p => p.boardId)).size;
+
+  res.json({
+    posts: userPosts.length,
+    boards: activeBoards,
+    likes: 0 // пока не реализовано, но для UI
+  });
+});
+
 // запуск
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { auth } from '../firebase';
 import { FaUser, FaEnvelope, FaIdCard, FaEdit, FaSave } from 'react-icons/fa';
+import HallwayLogo from './HallwayLogo';
 import './Profile.css';
 
 export default function Profile() {
@@ -8,11 +9,20 @@ export default function Profile() {
     const [isEditing, setIsEditing] = useState(false);
     const [displayName, setDisplayName] = useState(user?.displayName || '');
     const [bio, setBio] = useState('Enthusiastic student and explorer of ideas.');
+    const [stats, setStats] = useState({ posts: 0, boards: 0, likes: 0 });
 
-    if (!user) return <p>Please log in to view your profile.</p>;
+    useEffect(() => {
+        if (user) {
+            fetch(`http://localhost:3000/api/user-stats/${user.uid}`)
+                .then(res => res.json())
+                .then(data => setStats(data))
+                .catch(err => console.error("Error fetching stats:", err));
+        }
+    }, [user]);
+
+    if (!user) return <p className="loading-state">Please log in to view your profile.</p>;
 
     const handleSave = () => {
-        // In a real app, you would update Firebase Profile here
         setIsEditing(false);
     };
 
@@ -69,19 +79,19 @@ export default function Profile() {
                 </div>
 
                 <div className="card profile-stats-card">
-                    <h3>Activity Summary</h3>
+                    <h3 className="stats-header-title">Activity Summary</h3>
                     <div className="stats-row">
                         <div className="stat-box">
-                            <span className="stat-number">12</span>
-                            <span className="stat-label">Posts</span>
+                            <span className="stat-number">{stats.posts}</span>
+                            <span className="stat-label">POSTS</span>
                         </div>
                         <div className="stat-box">
-                            <span className="stat-number">4</span>
-                            <span className="stat-label">Boards</span>
+                            <span className="stat-number">{stats.boards}</span>
+                            <span className="stat-label">BOARDS</span>
                         </div>
                         <div className="stat-box">
-                            <span className="stat-number">48</span>
-                            <span className="stat-label">Likes</span>
+                            <span className="stat-number">{stats.likes}</span>
+                            <span className="stat-label">LIKES</span>
                         </div>
                     </div>
                 </div>
@@ -89,3 +99,4 @@ export default function Profile() {
         </div>
     );
 }
+

@@ -6,6 +6,7 @@ import BoardPage from './components/BoardPage';
 import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar/Sidebar';
 import Profile from './components/Profile';
+import Settings from './components/Settings';
 import { useTheme, ThemeProvider } from './themeStore';
 import './theme.css';
 import './App.css';
@@ -73,7 +74,7 @@ export default function App() {
             <Route path="/boards" element={<Boards boards={boards} />} />
             <Route path="/board/:id" element={<BoardPage />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<div>Settings Page (Coming Soon)</div>} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>

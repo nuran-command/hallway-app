@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import HallwayLogo from "../HallwayLogo";
 import { useTheme } from "../../themeStore";
 import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
@@ -24,15 +25,7 @@ export default function Sidebar({ open, setOpen, user }) {
       <aside className={`sidebar ${open ? "open" : "closed"}`}>
         <div className="sidebar-header">
           <div className="logo-container">
-            <div className="logo-icon">
-              <svg viewBox="0 0 100 100" width="30" height="30">
-                <rect x="10" y="10" width="80" height="80" fill="none" stroke="currentColor" strokeWidth="4" />
-                <path d="M10 10 L50 40 L90 10" fill="none" stroke="currentColor" strokeWidth="4" />
-                <path d="M10 90 L50 60 L90 90" fill="none" stroke="currentColor" strokeWidth="4" />
-                <rect x="40" y="40" width="20" height="30" fill="currentColor" opacity="0.8" />
-                <circle cx="50" cy="5" r="3" fill="#fbbf24" />
-              </svg>
-            </div>
+            <HallwayLogo size={32} />
             {open && <span className="logo-text">HallWay</span>}
           </div>
           {isMobile && (

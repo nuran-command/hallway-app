@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaHashtag, FaUsers, FaArrowRight } from "react-icons/fa";
+import HallwayLogo from "./HallwayLogo";
 import "./Dashboard.css";
 
 export default function Dashboard() {
@@ -22,11 +23,7 @@ export default function Dashboard() {
       {/* Welcome Banner */}
       <section className="welcome-banner">
         <div className="welcome-avatar">
-          <svg viewBox="0 0 100 100" width="100%" height="100%">
-            <path d="M50 20 C60 20 70 30 70 40 C70 50 60 60 50 60 C40 60 30 50 30 40 C30 30 40 20 50 20" fill="currentColor" />
-            <path d="M20 80 C20 70 30 60 50 60 C70 60 80 70 80 80" fill="currentColor" />
-            <path d="M70 40 L90 20 M70 50 L90 50 M70 60 L85 75" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-          </svg>
+          <HallwayLogo size={64} />
         </div>
         <div className="welcome-text">
           <h2>Welcome to HallWay</h2>

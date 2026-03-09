@@ -100,6 +100,12 @@ app.get('/api/user-stats/:userId', (req, res) => {
   });
 });
 
+// получить последние посты (глобально)
+app.get('/api/recent-posts', (req, res) => {
+  const recent = posts.slice(-5).reverse();
+  res.json(recent);
+});
+
 // запуск
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

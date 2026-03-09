@@ -1,7 +1,7 @@
 .dashboard-container {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 32px;
 }
 
 .welcome-banner {
@@ -19,19 +19,78 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
   box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2);
 }
 
 .welcome-text h2 {
   font-size: 2rem;
   margin: 0;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .welcome-text p {
   color: #64748b;
   margin: 4px 0 0;
+  font-size: 1.1rem;
+}
+
+/* Quick Actions */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.quick-action-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  text-decoration: none;
+  color: var(--text-color);
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: var(--accent-color);
+}
+
+.action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.action-icon.purple {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+.action-icon.blue {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.action-icon.green {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+/* Main Grid */
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
 }
 
 .section-header {
@@ -42,57 +101,131 @@
 }
 
 .section-header h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   margin: 0;
+}
+
+.title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-icon {
+  color: var(--accent-color);
+  opacity: 0.8;
 }
 
 .view-all {
   color: var(--accent-color);
   text-decoration: none;
-  font-weight: 500;
-  font-size: 0.9rem;
-  transition: opacity 0.2s;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+/* Activity List */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.stat-card {
+.activity-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+}
+
+.item-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: var(--accent-color);
+  color: white;
   display: flex;
   align-items: center;
-  gap: 16px;
-  transition: transform 0.2s;
-  text-decoration: none;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.item-content {
+  flex: 1;
+}
+
+.item-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.item-meta span {
+  color: #64748b;
+}
+
+.item-content p {
+  margin: 0 0 12px;
+  line-height: 1.5;
   color: var(--text-color);
 }
 
-.stat-card:hover {
-  transform: translateY(-4px);
+.item-footer {
+  font-size: 0.8rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.stat-icon {
-  width: 48px;
-  height: 48px;
+/* Right Columns */
+.vertical-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stat-card.miniature {
+  padding: 12px 16px;
   border-radius: 12px;
-  background-color: rgba(99, 102, 241, 0.1);
+}
+
+.mini-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: rgba(99, 102, 241, 0.08);
   color: var(--accent-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.mini-icon.blue {
+  background-color: rgba(59, 130, 246, 0.08);
+  color: #3b82f6;
 }
 
 .stat-info h4 {
+  font-size: 0.95rem;
   margin: 0;
-  font-weight: 600;
 }
 
-.stat-info p {
-  margin: 4px 0 0;
-  font-size: 0.85rem;
-  color: #64748b;
+.mini-arrow {
+  margin-left: auto;
+  font-size: 0.8rem;
+  opacity: 0.3;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
 }

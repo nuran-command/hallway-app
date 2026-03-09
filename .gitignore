@@ -25,3 +25,6 @@ pnpm-debug.log*
 .vscode/
 .idea/
 .DS_Store
+
+# Backend persistent data (local JSON DB)
+backend/data/

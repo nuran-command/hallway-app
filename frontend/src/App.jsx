@@ -7,6 +7,7 @@ import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar/Sidebar';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
+import TopHeader from './components/TopHeader';
 import { useTheme, ThemeProvider } from './themeStore';
 import './theme.css';
 import './App.css';
@@ -33,6 +34,18 @@ export default function App() {
       setUser(currentUser);
       if (currentUser) {
         socket.emit('join_hallway', currentUser.uid);
+
+        // Sync user info with backend
+        fetch('http://localhost:3000/api/users/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUser.uid,
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL,
+            email: currentUser.email
+          })
+        });
       }
       setLoadingUser(false);
     });
@@ -77,15 +90,13 @@ export default function App() {
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} user={user} />
 
       <main className="main-content">
-        <header className="top-header">
-          <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-            ☰
-          </button>
-          <div className="user-profile-nav">
-            <span>{user.displayName || user.email}</span>
-            <button className="logout-btn-nav" onClick={handleLogout}>Logout</button>
-          </div>
-        </header>
+        <TopHeader
+          user={user}
+          socket={socket}
+          onLogout={handleLogout}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
 
         <div className="page-container">
           <Routes>

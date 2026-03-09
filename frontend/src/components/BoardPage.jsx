@@ -4,7 +4,8 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage, auth } from "../firebase";
 import ReactMarkdown from 'react-markdown';
 import Skeleton from './Skeleton';
-import { FaHashtag, FaImage, FaTrash, FaThumbsUp, FaRegComment, FaShareAlt, FaArrowLeft, FaTimes } from "react-icons/fa";
+import { FaHashtag, FaImage, FaTrash, FaThumbsUp, FaRegComment, FaShareAlt, FaArrowLeft, FaTimes, FaUserPlus } from "react-icons/fa";
+import './BoardPage.css';
 
 function BoardPage({ socket }) {
   const { id } = useParams();
@@ -16,22 +17,29 @@ function BoardPage({ socket }) {
   const [error, setError] = useState("");
   const [typingUser, setTypingUser] = useState(null);
   const [lightboxImg, setLightboxImg] = useState(null);
+  const [friends, setFriends] = useState([]);
 
-  const loadPosts = async () => {
+  const loadData = async () => {
     setLoadingPosts(true);
     try {
       const res = await fetch(`http://localhost:3000/api/posts?boardId=${id}`);
       const data = await res.json();
       setPosts(data.reverse());
+
+      if (auth.currentUser) {
+        const friendsRes = await fetch(`http://localhost:3000/api/friends/${auth.currentUser.uid}`);
+        const friendsData = await friendsRes.json();
+        setFriends(friendsData);
+      }
     } catch (err) {
-      console.log("Failed to load posts:", err);
+      console.log("Failed to load data:", err);
     } finally {
       setLoadingPosts(false);
     }
   };
 
   useEffect(() => {
-    loadPosts();
+    loadData();
 
     // Socket listeners
     socket.on('new_post', (post) => {
@@ -51,7 +59,24 @@ function BoardPage({ socket }) {
       socket.off('new_post');
       socket.off('user_typing');
     };
-  }, [id, socket]);
+  }, [id, socket, auth.currentUser]);
+
+  const handleAddFriend = async (toUserId) => {
+    try {
+      await fetch('http://localhost:3000/api/friends/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: auth.currentUser.uid,
+          to: toUserId,
+          fromName: auth.currentUser.displayName || auth.currentUser.email
+        })
+      });
+      alert('Friend request sent!');
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleTextChange = (e) => {
     setText(e.target.value);
@@ -204,9 +229,16 @@ function BoardPage({ socket }) {
                     {p.displayName ? p.displayName[0].toUpperCase() : (p.userEmail ? p.userEmail[0].toUpperCase() : '?')}
                   </Link>
                   <div className="post-author-details">
-                    <Link to={`/profile/${p.userId}`} className="post-author-name">
-                      {p.displayName || (p.userEmail ? p.userEmail.split('@')[0] : 'Anonymous')}
-                    </Link>
+                    <div className="post-author-header">
+                      <Link to={`/profile/${p.userId}`} className="post-author-name">
+                        {p.displayName || (p.userEmail ? p.userEmail.split('@')[0] : 'Anonymous')}
+                      </Link>
+                      {auth.currentUser && auth.currentUser.uid !== p.userId && !friends.some(f => f.id === p.userId) && (
+                        <button className="add-friend-btn-post" onClick={() => handleAddFriend(p.userId)} title="Add Friend">
+                          <FaUserPlus />
+                        </button>
+                      )}
+                    </div>
                     <span className="post-time">{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Just now'}</span>
                   </div>
                 </div>

@@ -11,6 +11,7 @@ export default function Dashboard({ socket, boards }) {
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const currentUser = auth.currentUser;
+  const isUrl = (str) => str && (str.startsWith('http') || str.startsWith('blob:'));
 
   useEffect(() => {
     if (!currentUser) return;
@@ -42,6 +43,8 @@ export default function Dashboard({ socket, boards }) {
     socket.on('online_status_change', ({ userId, status }) => {
       setFriends(prev => prev.map(f => f.id === userId ? { ...f, status } : f));
     });
+
+    socket.on('friendship_updated', fetchData);
 
     return () => {
       socket.off('new_post');
@@ -150,16 +153,23 @@ export default function Dashboard({ socket, boards }) {
                 </div>
               ) : (
                 friends.map(f => (
-                  <div key={f.id} className="card stat-card miniature">
-                    <div className={`mini-avatar ${f.status}`}>
-                      {f.email[0].toUpperCase()}
-                      <FaCircle className="status-dot" />
+                  <Link key={f.id} to={`/profile/${f.id}`} className="friend-card-link">
+                    <div className="card stat-card miniature friend-hover">
+                      <div className={`mini-avatar ${f.status}`}>
+                        {isUrl(f.photoURL) ? (
+                          <img src={f.photoURL} alt="Avatar" />
+                        ) : (
+                          <span>{f.displayName ? f.displayName[0].toUpperCase() : '?'}</span>
+                        )}
+                        <FaCircle className="status-dot" />
+                      </div>
+                      <div className="stat-info">
+                        <h4>{f.displayName}</h4>
+                        <span className="status-text">{f.status}</span>
+                      </div>
+                      <FaArrowRight className="mini-arrow" />
                     </div>
-                    <div className="stat-info">
-                      <h4>{f.email}</h4>
-                      <span className="status-text">{f.status}</span>
-                    </div>
-                  </div>
+                  </Link>
                 ))
               )}
             </div>

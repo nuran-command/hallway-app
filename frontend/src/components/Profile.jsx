@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { auth } from '../firebase';
 import { updateProfile } from 'firebase/auth';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaIdCard, FaEdit, FaSave, FaArrowLeft, FaRocket, FaCompass, FaRegComment } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaIdCard, FaEdit, FaSave, FaArrowLeft, FaRocket, FaCompass, FaRegComment, FaUserPlus, FaCamera } from 'react-icons/fa';
 import HallwayLogo from './HallwayLogo';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 import './Profile.css';
 
 export default function Profile() {
     const { userId } = useParams();
     const navigate = useNavigate();
     const currentUser = auth.currentUser;
+    const isUrl = (str) => str && (str.startsWith('http') || str.startsWith('blob:'));
 
-    // If userId is provided in URL, we are viewing another user.
-    // Otherwise, we are viewing the current logged-in user.
     const isOwner = !userId || userId === currentUser?.uid;
     const targetUserId = userId || currentUser?.uid;
 
@@ -22,34 +23,60 @@ export default function Profile() {
     const [bio, setBio] = useState('Enthusiastic student and explorer of ideas.');
     const [stats, setStats] = useState({ posts: 0, boards: 0, likes: 0 });
     const [loading, setLoading] = useState(true);
+    const [isFriend, setIsFriend] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [photoURL, setPhotoURL] = useState('');
 
     useEffect(() => {
         if (targetUserId) {
             setLoading(true);
-            // In a better backend, we'd have a user details endpoint.
-            // For now, we'll fetch stats and use currentUser info if it's the owner.
-            fetch(`http://localhost:3000/api/user-stats/${targetUserId}`)
-                .then(res => res.json())
-                .then(data => {
+
+            const fetchProfile = async () => {
+                try {
+                    const statsRes = await fetch(`http://localhost:3000/api/user-stats/${targetUserId}`);
+                    const data = await statsRes.json();
                     setStats(data);
+
+                    if (currentUser && !isOwner) {
+                        const friendsRes = await fetch(`http://localhost:3000/api/friends/${currentUser.uid}`);
+                        const friends = await friendsRes.json();
+                        setIsFriend(friends.some(f => f.id === targetUserId));
+                    }
+
                     if (isOwner) {
                         setDisplayName(currentUser?.displayName || '');
+                        setPhotoURL(currentUser?.photoURL || '');
                         setEmail(currentUser?.email || '');
                         setBio(localStorage.getItem(`bio_${currentUser?.uid}`) || 'Enthusiastic student and explorer of ideas.');
                     } else {
-                        // For other users, we don't have a lookup yet, so we'll show "Student"
                         setDisplayName(data.displayName || 'Student');
-                        setEmail('•••••@•••••.com'); // Privacy
+                        setPhotoURL(data.photoURL || '');
+                        setEmail('•••••@•••••.com');
                         setBio('This user has shared their passion for learning with the HallWay community.');
                     }
-                    setLoading(false);
-                })
-                .catch(err => {
+                } catch (err) {
                     console.error("Error fetching stats:", err);
+                } finally {
                     setLoading(false);
-                });
+                }
+            };
+
+            fetchProfile();
         }
     }, [targetUserId, isOwner, currentUser]);
+
+    const handleAddFriend = async () => {
+        try {
+            await fetch('http://localhost:3000/api/friends/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ from: currentUser.uid, to: targetUserId })
+            });
+            alert('Friend request sent!');
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     if (loading) return <p className="loading-state">Loading Profile...</p>;
     if (!currentUser && !userId) return <p className="loading-state">Please log in to view your profile.</p>;
@@ -61,9 +88,30 @@ export default function Profile() {
             });
             localStorage.setItem(`bio_${currentUser.uid}`, bio);
             setIsEditing(false);
+            alert("Profile updated!");
         } catch (error) {
             console.error("Error updating profile:", error);
             alert("Failed to save profile changes.");
+        }
+    };
+
+    const handleAvatarChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const fileRef = ref(storage, `avatars/${currentUser.uid}`);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+            await updateProfile(currentUser, { photoURL: url });
+            setPhotoURL(url);
+            alert("Avatar updated!");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to upload avatar.");
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -79,16 +127,33 @@ export default function Profile() {
                 <div className="profile-cover"></div>
                 <div className="profile-info-main">
                     <div className="profile-avatar-large">
-                        {displayName ? displayName[0].toUpperCase() : (email ? email[0].toUpperCase() : '?')}
+                        {isUrl(photoURL) ? (
+                            <img src={photoURL} alt="Avatar" />
+                        ) : (
+                            displayName ? displayName[0].toUpperCase() : (email ? email[0].toUpperCase() : '?')
+                        )}
+                        {isOwner && (
+                            <label className="avatar-upload-overlay">
+                                <FaCamera />
+                                <input type="file" onChange={handleAvatarChange} style={{ display: 'none' }} accept="image/*" />
+                            </label>
+                        )}
+                        {uploading && <div className="avatar-loader"></div>}
                     </div>
                     <div className="profile-title-group">
                         <h2 className="profile-name-text">{displayName || email.split('@')[0] || 'HallWay Explorer'}</h2>
                         <p className="profile-email-text">{email}</p>
                     </div>
-                    {isOwner && (
+                    {isOwner ? (
                         <button className="edit-profile-btn" onClick={() => (isEditing ? handleSave() : setIsEditing(true))}>
                             {isEditing ? <><FaSave /> Save</> : <><FaEdit /> Edit Profile</>}
                         </button>
+                    ) : (
+                        currentUser && !isFriend && (
+                            <button className="edit-profile-btn" style={{ background: '#10b981' }} onClick={handleAddFriend}>
+                                <FaUserPlus /> Add Friend
+                            </button>
+                        )
                     )}
                 </div>
             </div>

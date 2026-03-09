@@ -76,6 +76,8 @@ let boards = [
 let posts = [{ id: 1, boardId: 1, text: "Welcome to IT board!", userId: "system", userEmail: "system@hallway.com", likes: [], comments: [], createdAt: new Date().toISOString() }];
 
 let friendships = []; // [{ user1: string, user2: string }]
+let notifications = []; // [{ id, type, from, to, status: 'unread'|'read'|'accepted', timestamp, fromName }]
+let users = {}; // userId -> { displayName, photoURL, email }
 let onlineUsers = new Map(); // userId -> socketId
 
 // --- BOARD ENDPOINTS ---
@@ -164,10 +166,55 @@ app.delete('/api/posts/:id', async (req, res) => {
 
 // --- SOCIAL ENDPOINTS ---
 app.post('/api/friends/request', (req, res) => {
-  const { from, to } = req.body;
+  const { from, to, fromName } = req.body;
   if (!friendships.find(f => (f.user1 === from && f.user2 === to) || (f.user1 === to && f.user2 === from))) {
-    friendships.push({ user1: from, user2: to });
+    // Add notification instead of direct friendship
+    const newNotif = {
+      id: Date.now(),
+      type: 'friend_request',
+      from,
+      to,
+      fromName: fromName || from,
+      status: 'unread',
+      timestamp: new Date().toISOString()
+    };
+    notifications.push(newNotif);
+
+    // Emit real-time notification if target is online
+    const targetSocket = onlineUsers.get(to);
+    if (targetSocket) {
+      io.to(targetSocket).emit('notification', newNotif);
+    }
   }
+  res.json({ success: true });
+});
+
+app.get('/api/notifications/:userId', (req, res) => {
+  const { userId } = req.params;
+  res.json(notifications.filter(n => n.to === userId));
+});
+
+app.post('/api/notifications/:id/accept', (req, res) => {
+  const notifId = Number(req.params.id);
+  const notif = notifications.find(n => n.id === notifId);
+  if (notif && notif.type === 'friend_request') {
+    notif.status = 'accepted';
+    friendships.push({ user1: notif.from, user2: notif.to });
+    io.emit('friendship_updated', { user1: notif.from, user2: notif.to });
+    // Send notification back to the sender? Maybe later
+  }
+  res.json({ success: true });
+});
+
+app.post('/api/notifications/:id/clear', (req, res) => {
+  const notifId = Number(req.params.id);
+  notifications = notifications.filter(n => n.id !== notifId);
+  res.json({ success: true });
+});
+
+app.post('/api/users/profile', (req, res) => {
+  const { userId, displayName, photoURL, email } = req.body;
+  users[userId] = { ...users[userId], displayName, photoURL, email };
   res.json({ success: true });
 });
 
@@ -177,10 +224,11 @@ app.get('/api/friends/:userId', (req, res) => {
     .filter(f => f.user1 === userId || f.user2 === userId)
     .map(f => f.user1 === userId ? f.user2 : f.user1);
 
-  // Attach status
+  // Attach status and profile
   const friendsWithStatus = userFriends.map(fId => ({
     id: fId,
-    email: `${fId.slice(0, 5)}...`, // Mock email
+    displayName: users[fId]?.displayName || users[fId]?.email?.split('@')[0] || fId.slice(0, 5),
+    photoURL: users[fId]?.photoURL || null,
     status: onlineUsers.has(fId) ? 'online' : 'offline'
   }));
   res.json(friendsWithStatus);
@@ -189,7 +237,13 @@ app.get('/api/friends/:userId', (req, res) => {
 app.get('/api/user-stats/:userId', (req, res) => {
   const userId = req.params.userId;
   const userPosts = posts.filter(p => p.userId === userId);
-  res.json({ posts: userPosts.length, boards: new Set(userPosts.map(p => p.boardId)).size, likes: 0 });
+  const totalReceivedLikes = userPosts.reduce((acc, p) => acc + (p.likes?.length || 0), 0);
+  res.json({
+    posts: userPosts.length,
+    boards: new Set(userPosts.map(p => p.boardId)).size,
+    likes: totalReceivedLikes,
+    profile: users[userId] || {}
+  });
 });
 
 app.get('/api/recent-posts', (req, res) => {

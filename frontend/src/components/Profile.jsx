@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auth } from '../firebase';
 import { updateProfile } from 'firebase/auth';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaIdCard, FaEdit, FaSave, FaArrowLeft, FaRocket, FaCompass, FaRegComment, FaUserPlus, FaCamera } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaIdCard, FaEdit, FaSave, FaArrowLeft, FaRocket, FaCompass, FaRegComment, FaUserPlus, FaCamera, FaLock } from 'react-icons/fa';
 import HallwayLogo from './HallwayLogo';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
@@ -159,68 +159,78 @@ export default function Profile() {
             </div>
 
             <div className="profile-grid">
-                <div className="card profile-details-card">
-                    <h3>Personal Information</h3>
-                    <div className="detail-item">
-                        <FaIdCard className="detail-icon" />
-                        <div className="detail-content">
-                            <span>Full Name</span>
-                            {isEditing ? (
-                                <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="profile-input" />
-                            ) : (
-                                <p>{displayName || 'Not provided'}</p>
-                            )}
+                {isOwner || isFriend ? (
+                    <>
+                        <div className="card profile-details-card">
+                            <h3>Personal Information</h3>
+                            <div className="detail-item">
+                                <FaIdCard className="detail-icon" />
+                                <div className="detail-content">
+                                    <span>Full Name</span>
+                                    {isEditing ? (
+                                        <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="profile-input" />
+                                    ) : (
+                                        <p>{displayName || 'Not provided'}</p>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="detail-item">
+                                <FaEnvelope className="detail-icon" />
+                                <div className="detail-content">
+                                    <span>Email Address</span>
+                                    <p>{email}</p>
+                                </div>
+                            </div>
+                            <div className="detail-item">
+                                <FaUser className="detail-icon" />
+                                <div className="detail-content">
+                                    <span>Biography</span>
+                                    {isEditing ? (
+                                        <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="profile-textarea" />
+                                    ) : (
+                                        <p>{bio}</p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div className="detail-item">
-                        <FaEnvelope className="detail-icon" />
-                        <div className="detail-content">
-                            <span>Email Address</span>
-                            <p>{email}</p>
-                        </div>
-                    </div>
-                    <div className="detail-item">
-                        <FaUser className="detail-icon" />
-                        <div className="detail-content">
-                            <span>Biography</span>
-                            {isEditing ? (
-                                <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="profile-textarea" />
-                            ) : (
-                                <p>{bio}</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
 
-                <div className="card profile-stats-card">
-                    <h3 className="stats-header-title">Activity Summary</h3>
-                    <div className="stats-row">
-                        <div className="stat-box">
-                            <span className="stat-number">{stats.posts}</span>
-                            <span className="stat-label">POSTS</span>
-                        </div>
-                        <div className="stat-box">
-                            <span className="stat-number">{stats.boards}</span>
-                            <span className="stat-label">BOARDS</span>
-                        </div>
-                        <div className="stat-box">
-                            <span className="stat-number">{stats.likes || 0}</span>
-                            <span className="stat-label">LIKES</span>
-                        </div>
-                    </div>
+                        <div className="card profile-stats-card">
+                            <h3 className="stats-header-title">Activity Summary</h3>
+                            <div className="stats-row">
+                                <div className="stat-box">
+                                    <span className="stat-number">{stats.posts}</span>
+                                    <span className="stat-label">POSTS</span>
+                                </div>
+                                <div className="stat-box">
+                                    <span className="stat-number">{stats.boards}</span>
+                                    <span className="stat-label">BOARDS</span>
+                                </div>
+                                <div className="stat-box">
+                                    <span className="stat-number">{stats.likes || 0}</span>
+                                    <span className="stat-label">LIKES</span>
+                                </div>
+                            </div>
 
-                    <div className="badges-section" style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-color)' }}>
-                        <h4 style={{ marginBottom: 12, fontSize: '0.9rem', opacity: 0.7 }}>Earned Badges</h4>
-                        <div className="badge-list" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                            {stats.posts >= 5 && <div className="user-badge" title="Top Contributor"><FaRocket style={{ color: '#f59e0b' }} /> Contributor</div>}
-                            {stats.posts >= 1 && <div className="user-badge" title="Active Explorer"><FaCompass style={{ color: '#6366f1' }} /> Explorer</div>}
-                            {stats.likes >= 10 && <div className="user-badge" title="Social Star"><FaRegComment style={{ color: '#ec4899' }} /> Star</div>}
-                            {stats.posts === 0 && <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>Start posting to earn badges!</span>}
+                            <div className="badges-section" style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-color)' }}>
+                                <h4 style={{ marginBottom: 12, fontSize: '0.9rem', opacity: 0.7 }}>Earned Badges</h4>
+                                <div className="badge-list" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                    {stats.posts >= 5 && <div className="user-badge" title="Top Contributor"><FaRocket style={{ color: '#f59e0b' }} /> Contributor</div>}
+                                    {stats.posts >= 1 && <div className="user-badge" title="Active Explorer"><FaCompass style={{ color: '#6366f1' }} /> Explorer</div>}
+                                    {stats.likes >= 10 && <div className="user-badge" title="Social Star"><FaRegComment style={{ color: '#ec4899' }} /> Star</div>}
+                                    {stats.posts === 0 && <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>Start posting to earn badges!</span>}
+                                </div>
+                            </div>
                         </div>
+                    </>
+                ) : (
+                    <div className="card profile-private-card" style={{ gridColumn: '1 / -1', padding: '64px 24px', textAlign: 'center' }}>
+                        <FaLock style={{ fontSize: '3rem', color: 'var(--border-color)', marginBottom: '16px' }} />
+                        <h3 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Profile is Private</h3>
+                        <p style={{ color: '#64748b' }}>Connect as a friend to view their full profile and recent HallWay activity.</p>
                     </div>
-                </div>
+                )}
             </div>
-        </div>
+        </div >
     );
 }
 

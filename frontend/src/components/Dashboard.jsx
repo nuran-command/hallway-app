@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaHashtag, FaUsers, FaArrowRight, FaPlus, FaRocket, FaRegComment, FaHistory, FaUserPlus, FaCircle, FaThumbsUp } from "react-icons/fa";
 import HallwayLogo from "./HallwayLogo";
 import Skeleton from "./Skeleton";
@@ -11,6 +11,7 @@ export default function Dashboard({ socket, boards }) {
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const currentUser = auth.currentUser;
+  const navigate = useNavigate();
   const isUrl = (str) => str && (str.startsWith('http') || str.startsWith('blob:'));
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function Dashboard({ socket, boards }) {
       await fetch('http://localhost:3000/api/friends/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: currentUser.uid, to: toUserId })
+        body: JSON.stringify({ from: currentUser.uid, to: toUserId, fromName: currentUser.displayName || currentUser.email })
       });
       alert('Friend request sent!');
     } catch (err) {
@@ -114,16 +115,16 @@ export default function Dashboard({ socket, boards }) {
             ) : (
               <div className="activity-list">
                 {recentPosts.length > 0 ? recentPosts.map(post => (
-                  <div key={post.id} className="activity-item card">
-                    <Link to={`/profile/${post.userId}`} className="item-avatar">
+                  <div key={post.id} className="activity-item card" onClick={() => navigate(`/board/${post.boardId}`)} style={{ cursor: 'pointer' }}>
+                    <Link to={`/profile/${post.userId}`} className="item-avatar" onClick={(e) => e.stopPropagation()}>
                       {post.displayName ? post.displayName[0].toUpperCase() : (post.userEmail ? post.userEmail[0].toUpperCase() : "A")}
                     </Link>
                     <div className="item-content">
                       <div className="item-meta">
-                        <Link to={`/profile/${post.userId}`} className="item-author-link">
+                        <Link to={`/profile/${post.userId}`} className="item-author-link" onClick={(e) => e.stopPropagation()}>
                           <strong>{post.displayName || (post.userEmail ? post.userEmail.split('@')[0] : "Anonymous")}</strong>
                         </Link>
-                        <span>posted on <Link to={`/board/${post.boardId}`}>Board #{post.boardId}</Link></span>
+                        <span>posted on <Link to={`/board/${post.boardId}`} onClick={(e) => e.stopPropagation()}>Board #{post.boardId}</Link></span>
                       </div>
                       <p>{post.text}</p>
                       <div className="item-footer">
@@ -164,7 +165,7 @@ export default function Dashboard({ socket, boards }) {
                         <FaCircle className="status-dot" />
                       </div>
                       <div className="stat-info">
-                        <h4>{f.displayName}</h4>
+                        <h4>{f.displayName || 'Peer'}</h4>
                         <span className="status-text">{f.status}</span>
                       </div>
                       <FaArrowRight className="mini-arrow" />

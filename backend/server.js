@@ -164,6 +164,15 @@ app.delete('/api/posts/:id', async (req, res) => {
   res.json({ success: true });
 });
 
+app.put('/api/posts/:id', (req, res) => {
+  const postId = Number(req.params.id);
+  const { text } = req.body;
+  const post = posts.find(p => p.id === postId);
+  if (!post) return res.status(404).json({ error: "Post not found" });
+  post.text = text;
+  res.json({ success: true, post });
+});
+
 // --- SOCIAL ENDPOINTS ---
 app.post('/api/friends/request', (req, res) => {
   const { from, to, fromName } = req.body;

@@ -211,6 +211,12 @@
     font-size: 0.95rem;
 }
 
+.user-profile-nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
 .header-user-info img,
 .avatar-small {
     width: 36px;

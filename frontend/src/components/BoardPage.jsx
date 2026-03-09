@@ -4,10 +4,10 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage, auth } from "../firebase";
 import ReactMarkdown from 'react-markdown';
 import Skeleton from './Skeleton';
-import { FaHashtag, FaImage, FaTrash, FaThumbsUp, FaRegComment, FaShareAlt, FaArrowLeft, FaTimes, FaUserPlus } from "react-icons/fa";
+import { FaHashtag, FaImage, FaTrash, FaThumbsUp, FaRegComment, FaShareAlt, FaArrowLeft, FaTimes, FaUserPlus, FaEdit } from "react-icons/fa";
 import './BoardPage.css';
 
-function BoardPage({ socket }) {
+function BoardPage({ socket, boards }) {
   const { id } = useParams();
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState("");
@@ -18,6 +18,8 @@ function BoardPage({ socket }) {
   const [typingUser, setTypingUser] = useState(null);
   const [lightboxImg, setLightboxImg] = useState(null);
   const [friends, setFriends] = useState([]);
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editPostText, setEditPostText] = useState("");
 
   const loadData = async () => {
     setLoadingPosts(true);
@@ -147,6 +149,26 @@ function BoardPage({ socket }) {
     }
   };
 
+  const startEdit = (post) => {
+    setEditingPostId(post.id);
+    setEditPostText(post.text);
+  };
+
+  const saveEditPost = async (postId) => {
+    try {
+      await fetch(`http://localhost:3000/api/posts/${postId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: editPostText })
+      });
+      setPosts(posts.map(p => p.id === postId ? { ...p, text: editPostText } : p));
+      setEditingPostId(null);
+    } catch (err) {
+      console.log("Edit error:", err);
+      setError("Failed to edit post.");
+    }
+  };
+
   const addComment = async (postId, commentText) => {
     if (!commentText.trim()) return;
     try {
@@ -174,9 +196,12 @@ function BoardPage({ socket }) {
           <FaArrowLeft /> Back to Boards
         </Link>
         <div className="header-flex">
-          <h2><FaHashtag /> <span>Board #{id}</span></h2>
+          <h2><FaHashtag /> <span>{boards?.find(b => b.id === Number(id))?.name || `Board #${id}`}</span></h2>
           {typingUser && <div className="typing-indicator">{typingUser} is typing...</div>}
         </div>
+        <p style={{ color: '#64748b', marginTop: '8px' }}>
+          {boards?.find(b => b.id === Number(id))?.description || 'Join the discussion'}
+        </p>
       </div>
 
       {error && <div className="error-text">{error}</div>}
@@ -244,7 +269,22 @@ function BoardPage({ socket }) {
                 </div>
 
                 <div className="post-content">
-                  <ReactMarkdown>{p.text}</ReactMarkdown>
+                  {editingPostId === p.id ? (
+                    <div className="edit-post-area">
+                      <textarea
+                        className="post-textarea"
+                        value={editPostText}
+                        onChange={(e) => setEditPostText(e.target.value)}
+                        style={{ minHeight: '80px', marginBottom: '10px' }}
+                      />
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <button className="interaction-btn" onClick={() => setEditingPostId(null)}>Cancel</button>
+                        <button className="create-btn" style={{ padding: '8px 16px', fontSize: '0.9rem' }} onClick={() => saveEditPost(p.id)}>Save</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <ReactMarkdown>{p.text}</ReactMarkdown>
+                  )}
                 </div>
 
                 {p.imageUrl && (
@@ -273,9 +313,14 @@ function BoardPage({ socket }) {
                   </div>
 
                   {auth.currentUser?.uid === p.userId && (
-                    <button className="delete-post-btn" onClick={() => deletePost(p.id)}>
-                      <FaTrash /> Delete
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="interaction-btn" onClick={() => startEdit(p)}>
+                        <FaEdit /> Edit
+                      </button>
+                      <button className="delete-post-btn" onClick={() => deletePost(p.id)}>
+                        <FaTrash /> Delete
+                      </button>
+                    </div>
                   )}
                 </div>
 

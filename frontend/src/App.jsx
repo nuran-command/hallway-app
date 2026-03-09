@@ -102,7 +102,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard socket={socket} boards={boards} />} />
             <Route path="/boards" element={<Boards boards={boards} onBoardCreated={fetchBoards} />} />
-            <Route path="/board/:id" element={<BoardPage socket={socket} />} />
+            <Route path="/board/:id" element={<BoardPage socket={socket} boards={boards} />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />

@@ -1,30 +1,66 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaHashtag, FaUsers, FaArrowRight, FaPlus, FaRocket, FaRegComment, FaHistory } from "react-icons/fa";
+import { FaHashtag, FaUsers, FaArrowRight, FaPlus, FaRocket, FaRegComment, FaHistory, FaUserPlus, FaCircle, FaThumbsUp } from "react-icons/fa";
 import HallwayLogo from "./HallwayLogo";
+import Skeleton from "./Skeleton";
+import { auth } from "../firebase";
 import "./Dashboard.css";
 
-export default function Dashboard() {
-  const [recentBoards, setRecentBoards] = useState([]);
+export default function Dashboard({ socket, boards }) {
   const [recentPosts, setRecentPosts] = useState([]);
-  const [recentChats] = useState([
-    { name: "IT Students Group", type: "Group" },
-    { name: "General Chat", type: "Group" },
-  ]);
+  const [friends, setFriends] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const currentUser = auth.currentUser;
 
   useEffect(() => {
-    // Fetch boards
-    fetch("http://localhost:3000/api/boards")
-      .then(res => res.json())
-      .then(data => setRecentBoards(data.slice(0, 3)))
-      .catch(err => console.error(err));
+    if (!currentUser) return;
 
-    // Fetch global posts
-    fetch("http://localhost:3000/api/recent-posts")
-      .then(res => res.json())
-      .then(data => setRecentPosts(data))
-      .catch(err => console.error(err));
-  }, []);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const postsRes = await fetch("http://localhost:3000/api/recent-posts");
+        const postsData = await postsRes.json();
+        setRecentPosts(postsData);
+
+        const friendsRes = await fetch(`http://localhost:3000/api/friends/${currentUser.uid}`);
+        const friendsData = await friendsRes.json();
+        setFriends(friendsData);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    // Socket events
+    socket.on('new_post', (post) => {
+      setRecentPosts(prev => [post, ...prev.slice(0, 4)]);
+    });
+
+    socket.on('online_status_change', ({ userId, status }) => {
+      setFriends(prev => prev.map(f => f.id === userId ? { ...f, status } : f));
+    });
+
+    return () => {
+      socket.off('new_post');
+      socket.off('online_status_change');
+    };
+  }, [currentUser, socket]);
+
+  const handleAddFriend = async (toUserId) => {
+    try {
+      await fetch('http://localhost:3000/api/friends/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: currentUser.uid, to: toUserId })
+      });
+      alert('Friend request sent!');
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="dashboard-container">
@@ -67,66 +103,86 @@ export default function Dashboard() {
                 <h3>Recent Global Activity</h3>
               </div>
             </div>
-            <div className="activity-list">
-              {recentPosts.length > 0 ? recentPosts.map(post => (
-                <div key={post.id} className="activity-item card">
-                  <div className="item-avatar">
-                    {post.userEmail ? post.userEmail[0].toUpperCase() : "A"}
-                  </div>
-                  <div className="item-content">
-                    <div className="item-meta">
-                      <strong>{post.userEmail ? post.userEmail.split('@')[0] : "Anonymous"}</strong>
-                      <span>posted on Board #{post.boardId}</span>
+
+            {loading ? (
+              <div className="activity-list">
+                {[1, 2, 3].map(i => <Skeleton key={i} height="100px" borderRadius="16px" />)}
+              </div>
+            ) : (
+              <div className="activity-list">
+                {recentPosts.length > 0 ? recentPosts.map(post => (
+                  <div key={post.id} className="activity-item card">
+                    <Link to={`/profile/${post.userId}`} className="item-avatar">
+                      {post.displayName ? post.displayName[0].toUpperCase() : (post.userEmail ? post.userEmail[0].toUpperCase() : "A")}
+                    </Link>
+                    <div className="item-content">
+                      <div className="item-meta">
+                        <Link to={`/profile/${post.userId}`} className="item-author-link">
+                          <strong>{post.displayName || (post.userEmail ? post.userEmail.split('@')[0] : "Anonymous")}</strong>
+                        </Link>
+                        <span>posted on <Link to={`/board/${post.boardId}`}>Board #{post.boardId}</Link></span>
+                      </div>
+                      <p>{post.text}</p>
+                      <div className="item-footer">
+                        <FaRegComment /> {post.comments?.length || 0} comments • <FaThumbsUp /> {post.likes?.length || 0}
+                      </div>
                     </div>
-                    <p>{post.text}</p>
-                    <div className="item-footer">
-                      <FaRegComment /> 0 comments
-                    </div>
                   </div>
-                </div>
-              )) : (
-                <p className="empty-state">No recent activity found.</p>
-              )}
-            </div>
+                )) : (
+                  <p className="empty-state">No recent activity found.</p>
+                )}
+              </div>
+            )}
           </section>
         </div>
 
         <div className="dashboard-right-col">
+          {/* Friends Section */}
+          <section className="dashboard-section">
+            <div className="section-header">
+              <h3>HallWay Friends</h3>
+              <FaUsers className="header-icon" />
+            </div>
+            <div className="vertical-grid">
+              {friends.length === 0 ? (
+                <div className="card miniature" style={{ padding: '16px', textAlign: 'center', opacity: 0.6 }}>
+                  <p style={{ fontSize: '0.8rem' }}>No friends yet. Add peers to see their status!</p>
+                </div>
+              ) : (
+                friends.map(f => (
+                  <div key={f.id} className="card stat-card miniature">
+                    <div className={`mini-avatar ${f.status}`}>
+                      {f.email[0].toUpperCase()}
+                      <FaCircle className="status-dot" />
+                    </div>
+                    <div className="stat-info">
+                      <h4>{f.email}</h4>
+                      <span className="status-text">{f.status}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
           {/* Recommended Boards */}
           <section className="dashboard-section">
             <div className="section-header">
-              <h3>Recommended</h3>
+              <h3>Boards to Join</h3>
               <Link to="/boards" className="view-all">See all</Link>
             </div>
             <div className="vertical-grid">
-              {recentBoards.map(b => (
-                <Link key={b.id} to={`/board/${b.id}`} className="card stat-card miniature">
+              {boards.slice(0, 3).map(b => (
+                <div key={b.id} className="card stat-card miniature board-join-item">
                   <div className="mini-icon">
                     <FaHashtag />
                   </div>
                   <div className="stat-info">
                     <h4>{b.name}</h4>
                   </div>
-                  <FaArrowRight className="mini-arrow" />
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          {/* Top Communities */}
-          <section className="dashboard-section">
-            <div className="section-header">
-              <h3>Communities</h3>
-            </div>
-            <div className="vertical-grid">
-              {recentChats.map((chat, i) => (
-                <div key={i} className="card stat-card miniature">
-                  <div className="mini-icon blue">
-                    <FaUsers />
-                  </div>
-                  <div className="stat-info">
-                    <h4>{chat.name}</h4>
-                  </div>
+                  <Link to={`/board/${b.id}`} className="join-btn-dashboard">
+                    <FaArrowRight />
+                  </Link>
                 </div>
               ))}
             </div>

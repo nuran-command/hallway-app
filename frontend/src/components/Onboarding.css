@@ -1,0 +1,66 @@
+.onboarding-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20000;
+}
+
+.onboarding-card {
+    max-width: 450px;
+    width: 90%;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+}
+
+.onboarding-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.step-icon {
+    font-size: 3rem;
+    color: var(--accent-color);
+    margin-bottom: 10px;
+}
+
+.onboarding-step h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+}
+
+.onboarding-step p {
+    color: #64748b;
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+.step-dots {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--border-color);
+    transition: all 0.3s;
+}
+
+.dot.active {
+    background-color: var(--accent-color);
+    width: 20px;
+    border-radius: 4px;
+}

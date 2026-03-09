@@ -12,6 +12,10 @@ import './theme.css';
 import './App.css';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { io } from 'socket.io-client';
+import Onboarding from './components/Onboarding';
+
+const socket = io('http://localhost:3000');
 
 export default function App() {
   const [boards, setBoards] = React.useState([]);
@@ -27,16 +31,30 @@ export default function App() {
   React.useEffect(() => {
     const unsub = onAuthStateChanged(auth, currentUser => {
       setUser(currentUser);
+      if (currentUser) {
+        socket.emit('join_hallway', currentUser.uid);
+      }
       setLoadingUser(false);
     });
     return () => unsub();
   }, []);
 
-  React.useEffect(() => {
+  const fetchBoards = () => {
     fetch('http://localhost:3000/api/boards')
       .then(res => res.json())
       .then(data => setBoards(data))
       .catch(err => console.error(err));
+  };
+
+  React.useEffect(() => {
+    fetchBoards();
+
+    socket.on('new_post', () => {
+      // Optional: global notification or refresh
+      console.log('New post available');
+    });
+
+    return () => socket.off('new_post');
   }, []);
 
   const handleLogout = async () => {
@@ -55,6 +73,7 @@ export default function App() {
 
   return (
     <div className={`app-wrapper ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+      <Onboarding />
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} user={user} />
 
       <main className="main-content">
@@ -63,17 +82,18 @@ export default function App() {
             ☰
           </button>
           <div className="user-profile-nav">
-            <span>{user.email}</span>
+            <span>{user.displayName || user.email}</span>
             <button className="logout-btn-nav" onClick={handleLogout}>Logout</button>
           </div>
         </header>
 
         <div className="page-container">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/boards" element={<Boards boards={boards} />} />
-            <Route path="/board/:id" element={<BoardPage />} />
+            <Route path="/" element={<Dashboard socket={socket} boards={boards} />} />
+            <Route path="/boards" element={<Boards boards={boards} onBoardCreated={fetchBoards} />} />
+            <Route path="/board/:id" element={<BoardPage socket={socket} />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

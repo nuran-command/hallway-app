@@ -23,9 +23,46 @@ app.use(express.json());
 // тестовые доски
 app.get('/api/boards', (req, res) => {
   res.json([
-    { id: 1, name: 'IT' },
-    { id: 2, name: 'Мемы' },
-    { id: 3, name: 'Университет' }
+    {
+      id: 1,
+      name: 'Computer Science',
+      description: 'Discuss algorithms, frameworks, and career paths in tech.',
+      members: 1240,
+      category: 'Academic',
+      icon: 'tech'
+    },
+    {
+      id: 2,
+      name: 'Funny Student Life',
+      description: 'The place to share memes and jokes about our daily struggles.',
+      members: 5600,
+      category: 'Social',
+      icon: 'fun'
+    },
+    {
+      id: 3,
+      name: 'University Events',
+      description: 'Upcoming parties, hackathons, and guest lectures.',
+      members: 3100,
+      category: 'Events',
+      icon: 'event'
+    },
+    {
+      id: 4,
+      name: 'Dorm Cooking',
+      description: 'Recipes for those surviving on induction cookers and instant ramen.',
+      members: 890,
+      category: 'Lifestyle',
+      icon: 'food'
+    },
+    {
+      id: 5,
+      name: 'Study Partners',
+      description: 'Find help for exams or join a focus study group.',
+      members: 2450,
+      category: 'Academic',
+      icon: 'study'
+    }
   ]);
 });
 

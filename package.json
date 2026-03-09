@@ -1,0 +1,27 @@
+{
+  "name": "studentnetwork",
+  "version": "1.0.0",
+  "description": "This project is a social network for students. It's built with a React frontend and a Node.js/Express backend.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && npm install && npm start",
+    "frontend": "cd frontend && npm install && npm run dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nuran-command/student-network.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/nuran-command/student-network/issues"
+  },
+  "homepage": "https://github.com/nuran-command/student-network#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

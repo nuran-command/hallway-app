@@ -1,0 +1,98 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.welcome-banner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.welcome-avatar {
+  width: 80px;
+  height: 80px;
+  background-color: var(--accent-color);
+  color: white;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2);
+}
+
+.welcome-text h2 {
+  font-size: 2rem;
+  margin: 0;
+  font-weight: 700;
+}
+
+.welcome-text p {
+  color: #64748b;
+  margin: 4px 0 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.view-all {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: opacity 0.2s;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.2s;
+  text-decoration: none;
+  color: var(--text-color);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background-color: rgba(99, 102, 241, 0.1);
+  color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.stat-info h4 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.stat-info p {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}

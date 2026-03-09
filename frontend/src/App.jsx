@@ -5,6 +5,7 @@ import Boards from './components/Boards';
 import BoardPage from './components/BoardPage';
 import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar/Sidebar';
+import Profile from './components/Profile';
 import { useTheme, ThemeProvider } from './themeStore';
 import './theme.css';
 import './App.css';
@@ -41,32 +42,42 @@ export default function App() {
     await signOut(auth);
   };
 
-  if (loadingUser) return <p>Loading...</p>;
+  if (loadingUser) return <div className="loading-screen"><p>Loading...</p></div>;
+
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="*" element={<LoginPage onLogin={setUser} />} />
+      </Routes>
+    );
+  }
 
   return (
-    <div className={`app-wrapper ${sidebarOpen ? "sidebar-open" : ""}`}>
-      {user && <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />}
+    <div className={`app-wrapper ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} user={user} />
 
-      <main className={`content ${sidebarOpen ? "with-sidebar" : ""}`}>
-        <Routes>
-          {!user ? (
-            <Route path="*" element={<LoginPage onLogin={setUser} />} />
-          ) : (
-            <>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/boards" element={<Boards boards={boards} />} />
-              <Route path="/board/:id" element={<BoardPage />} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </>
-          )}
-        </Routes>
+      <main className="main-content">
+        <header className="top-header">
+          <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            ☰
+          </button>
+          <div className="user-profile-nav">
+            <span>{user.email}</span>
+            <button className="logout-btn-nav" onClick={handleLogout}>Logout</button>
+          </div>
+        </header>
+
+        <div className="page-container">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/boards" element={<Boards boards={boards} />} />
+            <Route path="/board/:id" element={<BoardPage />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<div>Settings Page (Coming Soon)</div>} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </div>
       </main>
-
-      {user && (
-        <button className="logout-btn" onClick={handleLogout}>
-          Logout
-        </button>
-      )}
     </div>
   );
 }

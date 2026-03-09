@@ -7,6 +7,7 @@ import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar/Sidebar';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
+import ChatPage from './components/ChatPage';
 import TopHeader from './components/TopHeader';
 import { useTheme, ThemeProvider } from './themeStore';
 import './theme.css';
@@ -106,6 +107,8 @@ export default function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/chat" element={<ChatPage socket={socket} />} />
+            <Route path="/chat/:friendId" element={<ChatPage socket={socket} />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>

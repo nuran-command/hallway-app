@@ -1,15 +1,19 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { FaHashtag, FaSearch, FaPlus, FaUsers, FaArrowRight, FaTimes } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { FaHashtag, FaSearch, FaPlus, FaUsers, FaArrowRight, FaTimes, FaEdit, FaTrash } from "react-icons/fa";
 import Skeleton from "./Skeleton";
+import { auth } from "../firebase";
 import "./Boards.css";
 
 function Boards({ boards, onBoardCreated }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [newBoard, setNewBoard] = useState({ name: '', description: '', category: 'General' });
+  const [editBoardData, setEditBoardData] = useState(null);
   const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
 
   const categories = ["All", "Academic", "Social", "Events", "Lifestyle", "General"];
 
@@ -25,10 +29,11 @@ function Boards({ boards, onBoardCreated }) {
     if (!newBoard.name) return;
     setCreating(true);
     try {
+      const payload = { ...newBoard, createdBy: auth.currentUser?.uid };
       const res = await fetch('http://localhost:3000/api/boards', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newBoard)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         onBoardCreated();
@@ -41,6 +46,48 @@ function Boards({ boards, onBoardCreated }) {
       setCreating(false);
     }
   };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editBoardData.name) return;
+    setCreating(true);
+    try {
+      const res = await fetch(`http://localhost:3000/api/boards/${editBoardData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editBoardData)
+      });
+      if (res.ok) {
+        onBoardCreated();
+        setShowEditModal(false);
+        setEditBoardData(null);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const deleteBoard = async (id, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this board?")) return;
+    try {
+      await fetch(`http://localhost:3000/api/boards/${id}`, { method: 'DELETE' });
+      onBoardCreated();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const openEdit = (board, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditBoardData(board);
+    setShowEditModal(true);
+  };
+
 
   return (
     <div className="boards-container">
@@ -110,7 +157,19 @@ function Boards({ boards, onBoardCreated }) {
                 </div>
                 <div className="board-card-footer">
                   <span className="join-text">View Discussions</span>
-                  <FaArrowRight className="arrow-icon" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaArrowRight className="arrow-icon" />
+                    {b.createdBy && b.createdBy === auth.currentUser?.uid && (
+                      <div style={{ display: 'flex', gap: '8px', marginLeft: '8px' }}>
+                        <button className="edit-board-btn" onClick={(e) => openEdit(b, e)}>
+                          <FaEdit />
+                        </button>
+                        <button className="delete-board-btn-mini" onClick={(e) => deleteBoard(b.id, e)}>
+                          <FaTrash />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </Link>
@@ -166,6 +225,41 @@ function Boards({ boards, onBoardCreated }) {
           </div>
         </div>
       )}
+
+      {/* Edit Board Modal */}
+      {showEditModal && editBoardData && (
+        <div className="modal-overlay">
+          <div className="modal-content card">
+            <div className="modal-header">
+              <h3>Edit Board</h3>
+              <button className="close-modal" onClick={() => setShowEditModal(false)}><FaTimes /></button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="modal-form">
+              <div className="form-group">
+                <label>Board Name</label>
+                <input
+                  required
+                  placeholder="e.g. Photography Club"
+                  value={editBoardData.name}
+                  onChange={e => setEditBoardData({ ...editBoardData, name: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  placeholder="Tell students what this board is about..."
+                  value={editBoardData.description}
+                  onChange={e => setEditBoardData({ ...editBoardData, description: e.target.value })}
+                />
+              </div>
+              <button type="submit" className="submit-board-btn" disabled={creating}>
+                {creating ? 'Saving...' : 'Save Changes'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

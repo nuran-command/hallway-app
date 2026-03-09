@@ -70,9 +70,13 @@ export default function Profile() {
             await fetch('http://localhost:3000/api/friends/request', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ from: currentUser.uid, to: targetUserId })
+                body: JSON.stringify({
+                    from: currentUser.uid,
+                    to: targetUserId,
+                    fromName: currentUser.displayName || currentUser.email
+                })
             });
-            alert('Friend request sent!');
+            alert('Friend request sent! They will see it in their notifications.');
         } catch (err) {
             console.error(err);
         }
@@ -209,18 +213,68 @@ export default function Profile() {
                                     <span className="stat-number">{stats.likes || 0}</span>
                                     <span className="stat-label">LIKES</span>
                                 </div>
-                            </div>
-
-                            <div className="badges-section" style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-color)' }}>
-                                <h4 style={{ marginBottom: 12, fontSize: '0.9rem', opacity: 0.7 }}>Earned Badges</h4>
-                                <div className="badge-list" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                    {stats.posts >= 5 && <div className="user-badge" title="Top Contributor"><FaRocket style={{ color: '#f59e0b' }} /> Contributor</div>}
-                                    {stats.posts >= 1 && <div className="user-badge" title="Active Explorer"><FaCompass style={{ color: '#6366f1' }} /> Explorer</div>}
-                                    {stats.likes >= 10 && <div className="user-badge" title="Social Star"><FaRegComment style={{ color: '#ec4899' }} /> Star</div>}
-                                    {stats.posts === 0 && <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>Start posting to earn badges!</span>}
+                                <div className="stat-box">
+                                    <span className="stat-number">{stats.friends || 0}</span>
+                                    <span className="stat-label">FRIENDS</span>
                                 </div>
                             </div>
+
+                            {/* XP & Level Gamification */}
+                            {(() => {
+                                const xp = (stats.posts * 50) + ((stats.likes || 0) * 5);
+                                const levels = [
+                                    { name: 'Explorer', min: 0, max: 100, color: '#64748b' },
+                                    { name: 'Contributor', min: 100, max: 300, color: '#6366f1' },
+                                    { name: 'Scholar', min: 300, max: 700, color: '#10b981' },
+                                    { name: 'Legend', min: 700, max: 1500, color: '#f59e0b' },
+                                    { name: 'HallWay Master', min: 1500, max: 1500, color: '#ec4899' },
+                                ];
+                                const level = levels.findLast(l => xp >= l.min) || levels[0];
+                                const nextLevel = levels[levels.indexOf(level) + 1];
+                                const progress = nextLevel
+                                    ? Math.min(100, ((xp - level.min) / (nextLevel.min - level.min)) * 100)
+                                    : 100;
+                                return (
+                                    <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-color)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                            <div>
+                                                <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>LEVEL</span>
+                                                <h4 style={{ margin: '2px 0 0', fontSize: '1.2rem', color: level.color }}>{level.name}</h4>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <span style={{ fontSize: '1.5rem', fontWeight: 900, color: level.color }}>{xp}</span>
+                                                <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, display: 'block' }}>XP</span>
+                                            </div>
+                                        </div>
+                                        <div style={{ background: 'var(--bg-color)', borderRadius: 999, height: 10, overflow: 'hidden', marginBottom: 6 }}>
+                                            <div style={{
+                                                width: `${progress}%`,
+                                                height: '100%',
+                                                background: `linear-gradient(90deg, ${level.color}, ${nextLevel?.color || level.color})`,
+                                                borderRadius: 999,
+                                                transition: 'width 1s ease'
+                                            }} />
+                                        </div>
+                                        {nextLevel && (
+                                            <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>
+                                                {nextLevel.min - xp} XP to reach <strong>{nextLevel.name}</strong>
+                                            </p>
+                                        )}
+                                        {/* Badges */}
+                                        <div style={{ marginTop: 20 }}>
+                                            <h4 style={{ fontSize: '0.85rem', fontWeight: 700, opacity: 0.6, marginBottom: 10 }}>EARNED BADGES</h4>
+                                            <div className="badge-list" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                                {stats.posts >= 1 && <div className="user-badge" style={{ borderColor: '#6366f1' }}><FaCompass style={{ color: '#6366f1' }} /> Explorer</div>}
+                                                {stats.posts >= 5 && <div className="user-badge" style={{ borderColor: '#f59e0b' }}><FaRocket style={{ color: '#f59e0b' }} /> Contributor</div>}
+                                                {(stats.likes || 0) >= 10 && <div className="user-badge" style={{ borderColor: '#ec4899' }}><FaRegComment style={{ color: '#ec4899' }} /> Star</div>}
+                                                {stats.posts === 0 && <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>Post to earn your first badge! 🎯</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
+
                     </>
                 ) : (
                     <div className="card profile-private-card" style={{ gridColumn: '1 / -1', padding: '64px 24px', textAlign: 'center' }}>

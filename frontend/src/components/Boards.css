@@ -386,3 +386,41 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+/* Board owner controls */
+.edit-board-btn,
+.delete-board-btn-mini {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.edit-board-btn {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent-color);
+}
+
+.edit-board-btn:hover {
+    background: var(--accent-color);
+    color: white;
+    transform: scale(1.1);
+}
+
+.delete-board-btn-mini {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.delete-board-btn-mini:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
+}

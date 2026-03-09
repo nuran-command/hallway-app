@@ -3,7 +3,7 @@ import HallwayLogo from "../HallwayLogo";
 import { useTheme } from "../../themeStore";
 import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
-import { FaHome, FaUser, FaComments, FaCog, FaMoon, FaSun, FaTimes, FaCircle } from "react-icons/fa";
+import { FaHome, FaUser, FaComments, FaCog, FaMoon, FaSun, FaTimes, FaCircle, FaEnvelope } from "react-icons/fa";
 
 export default function Sidebar({ open, setOpen, user }) {
   const { theme, toggleTheme } = useTheme();
@@ -47,6 +47,10 @@ export default function Sidebar({ open, setOpen, user }) {
           <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
             <FaUser className="nav-icon" />
             {open && <span>Profile</span>}
+          </NavLink>
+          <NavLink to="/chat" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+            <FaEnvelope className="nav-icon" />
+            {open && <span>Messages</span>}
           </NavLink>
           <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
             <FaCog className="nav-icon" />

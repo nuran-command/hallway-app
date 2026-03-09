@@ -184,17 +184,17 @@ export default function Dashboard({ socket, boards }) {
             </div>
             <div className="vertical-grid">
               {boards.slice(0, 3).map(b => (
-                <div key={b.id} className="card stat-card miniature board-join-item">
-                  <div className="mini-icon">
-                    <FaHashtag />
+                <Link key={b.id} to={`/board/${b.id}`} className="board-join-link" style={{ textDecoration: 'none', display: 'block' }}>
+                  <div className="card stat-card miniature board-join-item">
+                    <div className="mini-icon">
+                      <FaHashtag />
+                    </div>
+                    <div className="stat-info">
+                      <h4>{b.name}</h4>
+                    </div>
+                    <FaArrowRight className="mini-arrow" />
                   </div>
-                  <div className="stat-info">
-                    <h4>{b.name}</h4>
-                  </div>
-                  <Link to={`/board/${b.id}`} className="join-btn-dashboard">
-                    <FaArrowRight />
-                  </Link>
-                </div>
+                </Link>
               ))}
             </div>
           </section>

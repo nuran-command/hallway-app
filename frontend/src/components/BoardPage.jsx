@@ -130,7 +130,10 @@ function BoardPage({ socket, boards }) {
       const res = await fetch(`http://localhost:3000/api/posts/${postId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: auth.currentUser.uid })
+        body: JSON.stringify({
+          userId: auth.currentUser.uid,
+          fromName: auth.currentUser.displayName || auth.currentUser.email?.split('@')[0]
+        })
       });
       const data = await res.json();
       setPosts(posts.map(p => p.id === postId ? { ...p, likes: data.likes } : p));

@@ -234,6 +234,7 @@ app.get('/api/notifications/:userId', async (req, res) => {
       .get();
     res.json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   } catch (err) {
+    console.error("GET /api/notifications Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -253,6 +254,7 @@ app.post('/api/notifications/:id/accept', async (req, res) => {
     }
     res.json({ success: true });
   } catch (err) {
+    console.error("ACCEPT NOTIFICATION Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -266,6 +268,7 @@ app.post('/api/users/profile', async (req, res) => {
     }, { merge: true });
     res.json({ success: true });
   } catch (err) {
+    console.error("UPDATE PROFILE Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -295,6 +298,7 @@ app.get('/api/friends/:userId', async (req, res) => {
     }
     res.json(friends);
   } catch (err) {
+    console.error("GET FRIENDS Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -311,6 +315,7 @@ app.get('/api/user-stats/:userId', async (req, res) => {
       profile: userDoc.data() || {}
     });
   } catch (err) {
+    console.error("GET USER STATS Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -320,6 +325,7 @@ app.get('/api/recent-posts', async (req, res) => {
     const snapshot = await db.collection('posts').orderBy('createdAt', 'desc').limit(5).get();
     res.json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   } catch (err) {
+    console.error("GET RECENT POSTS Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -341,6 +347,7 @@ app.get('/api/messages/:user1/:user2', async (req, res) => {
 
     res.json(messages);
   } catch (err) {
+    console.error("GET MESSAGES Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -367,6 +374,7 @@ app.post('/api/messages', async (req, res) => {
     }
     res.json(savedMsg);
   } catch (err) {
+    console.error("POST MESSAGE Error:", err);
     res.status(500).json({ error: err.message });
   }
 });

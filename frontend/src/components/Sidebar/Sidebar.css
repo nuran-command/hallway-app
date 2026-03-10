@@ -177,13 +177,19 @@
   .sidebar {
     transform: translateX(-100%);
     border-right: none;
+    box-shadow: 20px 0 25px -5px rgba(0, 0, 0, 0.1);
   }
 
   .sidebar.open {
     transform: translateX(0);
     width: var(--sidebar-width) !important;
   }
+
+  .sidebar.closed {
+    transform: translateX(-100%);
+  }
 }
+
 
 .close-sidebar {
   background: none;

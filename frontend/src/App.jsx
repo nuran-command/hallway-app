@@ -28,7 +28,12 @@ export default function App() {
 
   React.useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    // Initial check for mobile sidebar state
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
   }, [theme]);
+
 
   React.useEffect(() => {
     const unsub = onAuthStateChanged(auth, currentUser => {

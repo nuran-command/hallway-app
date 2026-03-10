@@ -51,10 +51,21 @@ body {
   width: 100%;
 }
 
-/* RESPONSIVE DESKTOP */
-@media (min-width: 1025px) {
-  .sidebar-closed .main-content {
-    margin-left: 80px;
+/* RESPONSIVE DESKTOP/TABLET */
+@media (max-width: 1200px) {
+  .page-container {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 16px;
+  }
+
+  .sidebar-closed .main-content,
+  .sidebar-open .main-content {
+    margin-left: 0 !important;
   }
 }
 

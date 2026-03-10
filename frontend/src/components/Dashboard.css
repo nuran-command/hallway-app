@@ -290,9 +290,52 @@
 @media (max-width: 1100px) {
   .dashboard-main-grid {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
 
   .quick-actions-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
+    gap: 16px;
+  }
+
+  .welcome-avatar {
+    margin: 0 auto;
+    width: 64px;
+    height: 64px;
+  }
+
+  .welcome-text h2 {
+    font-size: 1.6rem;
+  }
+
+  .welcome-text p {
+    font-size: 1rem;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .section-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .activity-item {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .item-avatar {
+    width: 36px;
+    height: 36px;
   }
 }

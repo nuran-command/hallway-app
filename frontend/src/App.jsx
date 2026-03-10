@@ -17,7 +17,11 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { io } from 'socket.io-client';
 import Onboarding from './components/Onboarding';
 
-const socket = io('http://localhost:3000');
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://YOUR-RENDER-APP-NAME.onrender.com'; // <--- REPLACE THIS WITH YOUR RENDER LINK
+
+const socket = io(API_URL);
 
 export default function App() {
   const [boards, setBoards] = React.useState([]);
@@ -42,7 +46,7 @@ export default function App() {
         socket.emit('join_hallway', currentUser.uid);
 
         // Sync user info with backend
-        fetch('http://localhost:3000/api/users/profile', {
+        fetch(`${API_URL}/api/users/profile`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -59,11 +63,12 @@ export default function App() {
   }, []);
 
   const fetchBoards = () => {
-    fetch('http://localhost:3000/api/boards')
+    fetch(`${API_URL}/api/boards`)
       .then(res => res.json())
       .then(data => setBoards(data))
       .catch(err => console.error(err));
   };
+
 
   React.useEffect(() => {
     fetchBoards();

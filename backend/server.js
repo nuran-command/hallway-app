@@ -18,12 +18,26 @@ const io = new Server(server, {
 });
 
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: "my-student-network-backend.firebasestorage.app"
-});
+// Handle Firebase Service Account for Render / Local
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+  try {
+    serviceAccount = require('./serviceAccountKey.json');
+  } catch (e) {
+    console.error("CRITICAL: serviceAccountKey.json not found and FIREBASE_SERVICE_ACCOUNT env var is missing.");
+  }
+}
+
+if (serviceAccount) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: "my-student-network-backend.firebasestorage.app"
+  });
+}
+
 
 const bucket = admin.storage().bucket();
 

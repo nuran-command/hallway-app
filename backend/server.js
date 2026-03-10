@@ -119,11 +119,46 @@ app.post('/api/boards', async (req, res) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     };
     const docRef = await db.collection('boards').add(newBoard);
-    res.json({ id: docRef.id, ...newBoard });
+    const savedBoard = { id: docRef.id, ...newBoard };
+    io.emit('board_created', savedBoard);
+    res.json(savedBoard);
   } catch (err) {
     console.error("POST /api/boards Error:", err);
     res.status(500).json({ error: err.message });
   }
+});
+
+app.put('/api/boards/:id', async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    await db.collection('boards').doc(req.params.id).update({ name, description });
+    io.emit('board_updated', { id: req.params.id, name, description });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("PUT Board Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/boards/:id', async (req, res) => {
+  try {
+    await db.collection('boards').doc(req.params.id).delete();
+    // Also delete all posts in this board
+    const posts = await db.collection('posts').where('boardId', '==', req.params.id).get();
+    const batch = db.batch();
+    posts.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    io.emit('board_deleted', req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE Board Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/ping', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
 // ─────────────────────────────────────────────

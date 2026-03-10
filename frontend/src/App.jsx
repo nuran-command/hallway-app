@@ -29,6 +29,8 @@ export default function App() {
 
   React.useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    console.log("🚀 HallWay App Started");
+    console.log("📍 API_URL:", API_URL);
     // Initial check for mobile sidebar state
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
@@ -74,28 +76,43 @@ export default function App() {
 
   const fetchBoards = () => {
     fetch(`${API_URL}/api/boards`)
-      .then(res => res.json())
+      .then(async res => {
+        if (!res.ok) {
+          const someText = await res.text();
+          console.error(`🚨 Backend Error (${res.status}):`, someText.slice(0, 50));
+          return [];
+        }
+        return res.json();
+      })
       .then(data => {
         if (Array.isArray(data)) {
           setBoards(data);
-        } else {
-          console.error("Backend returned error for boards:", data);
         }
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error("🚨 Boards Fetch Failed:", err));
   };
 
 
   React.useEffect(() => {
+    fetch(`${API_URL}/api/ping`).then(r => r.json()).then(d => console.log("API Status:", d)).catch(e => console.error("API DOWN:", e));
     fetchBoards();
 
-    socket.on('new_post', () => {
-      // Optional: global notification or refresh
-      console.log('New post available');
-    });
+    if (socket) {
+      socket.on('board_created', fetchBoards);
+      socket.on('board_updated', fetchBoards);
+      socket.on('board_deleted', fetchBoards);
+      socket.on('new_post', () => console.log('New post available'));
+    }
 
-    return () => socket.off('new_post');
-  }, []);
+    return () => {
+      if (socket) {
+        socket.off('board_created');
+        socket.off('board_updated');
+        socket.off('board_deleted');
+        socket.off('new_post');
+      }
+    };
+  }, [socket]);
 
   const handleLogout = async () => {
     await signOut(auth);

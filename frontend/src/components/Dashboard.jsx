@@ -22,14 +22,18 @@ export default function Dashboard({ socket, boards }) {
       setLoading(true);
       try {
         const postsRes = await fetch(`${API_URL}/api/recent-posts`);
-        const postsData = await postsRes.json();
-        if (Array.isArray(postsData)) setRecentPosts(postsData);
+        if (postsRes.ok) {
+          const postsData = await postsRes.json();
+          if (Array.isArray(postsData)) setRecentPosts(postsData);
+        }
 
         const friendsRes = await fetch(`${API_URL}/api/friends/${currentUser.uid}`);
-        const friendsData = await friendsRes.json();
-        if (Array.isArray(friendsData)) setFriends(friendsData);
+        if (friendsRes.ok) {
+          const friendsData = await friendsRes.json();
+          if (Array.isArray(friendsData)) setFriends(friendsData);
+        }
       } catch (err) {
-        console.error(err);
+        console.error("🚨 Dashboard Fetch ERROR:", err);
       } finally {
         setLoading(false);
       }

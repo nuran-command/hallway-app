@@ -37,11 +37,23 @@ export default function App() {
 
 
   React.useEffect(() => {
+    if (!user || !socket) return;
+
+    const onConnect = () => {
+      console.log("Connected to server, joining hallway...");
+      socket.emit('join_hallway', user.uid);
+    };
+
+    if (socket.connected) onConnect();
+
+    socket.on('connect', onConnect);
+    return () => socket.off('connect', onConnect);
+  }, [user]);
+
+  React.useEffect(() => {
     const unsub = onAuthStateChanged(auth, currentUser => {
       setUser(currentUser);
       if (currentUser) {
-        socket.emit('join_hallway', currentUser.uid);
-
         // Sync user info with backend
         fetch(`${API_URL}/api/users/profile`, {
           method: 'POST',
@@ -58,6 +70,7 @@ export default function App() {
     });
     return () => unsub();
   }, []);
+
 
   const fetchBoards = () => {
     fetch(`${API_URL}/api/boards`)

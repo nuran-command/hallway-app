@@ -1,25 +1,3 @@
-const express = require('express');
-const cors = require('cors');
-const http = require('http');
-const { Server } = require('socket.io');
-const fs = require('fs');
-const path = require('path');
-
-console.log('Starting HallWay server...');
-
-const app = express();
-const PORT = 3000;
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(',')
-      : ["http://localhost:5173", "http://localhost:3000"],
-    methods: ["GET", "POST", "DELETE", "PUT"]
-  }
-});
-
-
 const admin = require('firebase-admin');
 
 // Handle Firebase Service Account for Render / Local
@@ -41,7 +19,7 @@ if (serviceAccount) {
   });
 }
 
-
+const db = admin.firestore();
 const bucket = admin.storage().bucket();
 
 // middlewares
@@ -53,348 +31,316 @@ app.use(cors({
 app.use(express.json());
 
 // ─────────────────────────────────────────────
-//  PERSISTENT JSON STORAGE
+//  HELPER FUNCTIONS
 // ─────────────────────────────────────────────
-const DATA_DIR = path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
-
-const DB_PATHS = {
-  boards: path.join(DATA_DIR, 'boards.json'),
-  posts: path.join(DATA_DIR, 'posts.json'),
-  friendships: path.join(DATA_DIR, 'friendships.json'),
-  notifications: path.join(DATA_DIR, 'notifications.json'),
-  users: path.join(DATA_DIR, 'users.json'),
-  messages: path.join(DATA_DIR, 'messages.json'),
-};
-
-const DEFAULT_BOARDS = [
-  { id: 1, name: 'Computer Science', description: 'Discuss algorithms, frameworks, and career paths in tech.', members: 1240, category: 'Academic', icon: 'tech', createdBy: 'system' },
-  { id: 2, name: 'Funny Student Life', description: 'The place to share memes and jokes about our daily struggles.', members: 5600, category: 'Social', icon: 'fun', createdBy: 'system' },
-  { id: 3, name: 'University Events', description: 'Upcoming parties, hackathons, and guest lectures.', members: 3100, category: 'Events', icon: 'event', createdBy: 'system' },
-  { id: 4, name: 'Dorm Cooking', description: 'Recipes for those surviving on induction cookers and instant ramen.', members: 890, category: 'Lifestyle', icon: 'food', createdBy: 'system' },
-  { id: 5, name: 'Study Partners', description: 'Find help for exams or join a focus study group.', members: 2450, category: 'Academic', icon: 'study', createdBy: 'system' },
-];
-
-const DEFAULT_POSTS = [
-  { id: 1, boardId: 1, text: "Welcome to IT board!", userId: "system", userEmail: "system@hallway.com", displayName: "HallWay", likes: [], comments: [], createdAt: new Date().toISOString() }
-];
-
-function loadDB(filePath, defaultValue) {
-  try {
-    if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, 'utf8');
-      return JSON.parse(raw);
-    }
-  } catch (e) {
-    console.warn(`Failed to load ${filePath}:`, e.message);
-  }
-  return defaultValue;
-}
-
-function saveDB(filePath, data) {
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-  } catch (e) {
-    console.error(`Failed to save ${filePath}:`, e.message);
-  }
-}
-
-// Load all data from disk on startup
-let boards = loadDB(DB_PATHS.boards, DEFAULT_BOARDS);
-let posts = loadDB(DB_PATHS.posts, DEFAULT_POSTS);
-let friendships = loadDB(DB_PATHS.friendships, []);
-let notifications = loadDB(DB_PATHS.notifications, []);
-let users = loadDB(DB_PATHS.users, {});
-let messages = loadDB(DB_PATHS.messages, []);
-let onlineUsers = new Map(); // userId → socketId (always in-memory, resets on restart)
-
-// Auto-save every 30 seconds as a safety net
-setInterval(() => {
-  saveDB(DB_PATHS.boards, boards);
-  saveDB(DB_PATHS.posts, posts);
-  saveDB(DB_PATHS.friendships, friendships);
-  saveDB(DB_PATHS.notifications, notifications);
-  saveDB(DB_PATHS.users, users);
-  saveDB(DB_PATHS.messages, messages);
-}, 30_000);
+const onlineUsers = new Map(); // userId → socketId
 
 // ─────────────────────────────────────────────
 //  BOARD ENDPOINTS
 // ─────────────────────────────────────────────
-app.get('/api/boards', (req, res) => {
-  res.json(boards);
+app.get('/api/boards', async (req, res) => {
+  try {
+    const snapshot = await db.collection('boards').get();
+    let boards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // If no boards, Return empty or default
+    res.json(boards);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/boards', (req, res) => {
-  const { name, description, category, createdBy } = req.body;
-  const newBoard = {
-    id: (boards.reduce((m, b) => Math.max(m, b.id), 0)) + 1,
-    name,
-    description,
-    category: category || 'General',
-    members: 1,
-    icon: 'group',
-    createdBy: createdBy || "system"
-  };
-  boards.push(newBoard);
-  saveDB(DB_PATHS.boards, boards);
-  res.json(newBoard);
-});
-
-app.put('/api/boards/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const { name, description } = req.body;
-  const board = boards.find(b => b.id === id);
-  if (!board) return res.status(404).json({ error: "Board not found" });
-  if (name) board.name = name;
-  if (description) board.description = description;
-  saveDB(DB_PATHS.boards, boards);
-  res.json({ success: true, board });
-});
-
-app.delete('/api/boards/:id', (req, res) => {
-  const id = Number(req.params.id);
-  boards = boards.filter(b => b.id !== id);
-  saveDB(DB_PATHS.boards, boards);
-  res.json({ success: true });
+app.post('/api/boards', async (req, res) => {
+  try {
+    const { name, description, category, createdBy } = req.body;
+    const newBoard = {
+      name,
+      description,
+      category: category || 'General',
+      members: 1,
+      icon: 'group',
+      createdBy: createdBy || "system",
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+    const docRef = await db.collection('boards').add(newBoard);
+    res.json({ id: docRef.id, ...newBoard });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─────────────────────────────────────────────
 //  POST ENDPOINTS
 // ─────────────────────────────────────────────
-app.get('/api/posts', (req, res) => {
-  const boardId = Number(req.query.boardId);
-  res.json(posts.filter(p => p.boardId === boardId));
+app.get('/api/posts', async (req, res) => {
+  try {
+    const boardId = req.query.boardId;
+    const snapshot = await db.collection('posts')
+      .where('boardId', '==', boardId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(posts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/posts', (req, res) => {
-  const { boardId, text, imageUrl, userId, userEmail, displayName } = req.body;
-  const newPost = {
-    id: (posts.reduce((m, p) => Math.max(m, p.id), 0)) + 1,
-    boardId: Number(boardId),
-    text,
-    imageUrl: imageUrl || null,
-    userId,
-    userEmail,
-    displayName: displayName || null,
-    likes: [],
-    comments: [],
-    createdAt: new Date().toISOString()
-  };
-  posts.push(newPost);
-  saveDB(DB_PATHS.posts, posts);
-  io.emit('new_post', newPost);
-  res.json(newPost);
+app.post('/api/posts', async (req, res) => {
+  try {
+    const { boardId, text, imageUrl, userId, userEmail, displayName } = req.body;
+    const newPost = {
+      boardId,
+      text,
+      imageUrl: imageUrl || null,
+      userId,
+      userEmail,
+      displayName: displayName || null,
+      likes: [],
+      comments: [],
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+    const docRef = await db.collection('posts').add(newPost);
+    const savedPost = { id: docRef.id, ...newPost };
+    io.emit('new_post', savedPost);
+    res.json(savedPost);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─────────────────────────────────────────────
 //  INTERACTION ENDPOINTS
 // ─────────────────────────────────────────────
-app.post('/api/posts/:id/like', (req, res) => {
-  const postId = Number(req.params.id);
-  const { userId, fromName } = req.body;
-  const post = posts.find(p => p.id === postId);
-  if (!post) return res.status(404).json({ error: "Post not found" });
+app.post('/api/posts/:id/like', async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const { userId, fromName } = req.body;
+    const postRef = db.collection('posts').doc(postId);
+    const post = await postRef.get();
 
-  if (post.likes.includes(userId)) {
-    post.likes = post.likes.filter(id => id !== userId);
-  } else {
-    post.likes.push(userId);
-    if (post.userId !== userId) {
+    if (!post.exists) return res.status(404).json({ error: "Post not found" });
+
+    let likes = post.data().likes || [];
+    if (likes.includes(userId)) {
+      likes = likes.filter(id => id !== userId);
+    } else {
+      likes.push(userId);
+      // Create notification
+      if (post.data().userId !== userId) {
+        const notif = {
+          type: 'like', from: userId, to: post.data().userId,
+          fromName: fromName || 'Someone', postId, status: 'unread',
+          timestamp: new Date().toISOString()
+        };
+        await db.collection('notifications').add(notif);
+        const targetSocket = onlineUsers.get(post.data().userId);
+        if (targetSocket) io.to(targetSocket).emit('notification', notif);
+      }
+    }
+    await postRef.update({ likes });
+    res.json({ likes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/posts/:id/comment', async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const { userId, userEmail, displayName, text } = req.body;
+    const postRef = db.collection('posts').doc(postId);
+    const postDoc = await postRef.get();
+
+    if (!postDoc.exists) return res.status(404).json({ error: "Post not found" });
+
+    const comment = {
+      id: Date.now(), userId, userEmail, displayName,
+      text, createdAt: new Date().toISOString()
+    };
+
+    await postRef.update({
+      comments: admin.firestore.FieldValue.arrayUnion(comment)
+    });
+
+    if (postDoc.data().userId !== userId) {
       const notif = {
-        id: Date.now(), type: 'like', from: userId, to: post.userId,
-        fromName: fromName || 'Someone', postId, status: 'unread',
-        timestamp: new Date().toISOString()
+        type: 'comment', from: userId, to: postDoc.data().userId,
+        fromName: displayName || userEmail?.split('@')[0] || 'Someone',
+        postId, status: 'unread', timestamp: new Date().toISOString()
       };
-      notifications.push(notif);
-      saveDB(DB_PATHS.notifications, notifications);
-      const targetSocket = onlineUsers.get(post.userId);
+      await db.collection('notifications').add(notif);
+      const targetSocket = onlineUsers.get(postDoc.data().userId);
       if (targetSocket) io.to(targetSocket).emit('notification', notif);
     }
+    res.json(comment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  saveDB(DB_PATHS.posts, posts);
-  res.json({ likes: post.likes });
-});
-
-app.post('/api/posts/:id/comment', (req, res) => {
-  const postId = Number(req.params.id);
-  const { userId, userEmail, displayName, text } = req.body;
-  const post = posts.find(p => p.id === postId);
-  if (!post) return res.status(404).json({ error: "Post not found" });
-
-  const comment = {
-    id: post.comments.length + 1, userId, userEmail, displayName,
-    text, createdAt: new Date().toISOString()
-  };
-  post.comments.push(comment);
-
-  if (post.userId !== userId) {
-    const notif = {
-      id: Date.now(), type: 'comment', from: userId, to: post.userId,
-      fromName: displayName || userEmail?.split('@')[0] || 'Someone',
-      postId, status: 'unread', timestamp: new Date().toISOString()
-    };
-    notifications.push(notif);
-    saveDB(DB_PATHS.notifications, notifications);
-    const targetSocket = onlineUsers.get(post.userId);
-    if (targetSocket) io.to(targetSocket).emit('notification', notif);
-  }
-  saveDB(DB_PATHS.posts, posts);
-  res.json(comment);
-});
-
-app.delete('/api/posts/:id', async (req, res) => {
-  const postId = Number(req.params.id);
-  const post = posts.find(p => p.id === postId);
-  if (!post) return res.status(404).json({ error: "Post not found" });
-  if (post.imageUrl) {
-    try {
-      const urlPart = post.imageUrl.split("/o/")[1]?.split("?")[0];
-      if (urlPart) await bucket.file(decodeURIComponent(urlPart)).delete();
-    } catch (err) { console.log("Image delete error:", err.message); }
-  }
-  posts = posts.filter(p => p.id !== postId);
-  saveDB(DB_PATHS.posts, posts);
-  res.json({ success: true });
-});
-
-app.put('/api/posts/:id', (req, res) => {
-  const postId = Number(req.params.id);
-  const { text } = req.body;
-  const post = posts.find(p => p.id === postId);
-  if (!post) return res.status(404).json({ error: "Post not found" });
-  post.text = text;
-  saveDB(DB_PATHS.posts, posts);
-  res.json({ success: true, post });
 });
 
 // ─────────────────────────────────────────────
 //  SOCIAL ENDPOINTS
 // ─────────────────────────────────────────────
-app.post('/api/friends/request', (req, res) => {
-  const { from, to, fromName } = req.body;
-  const alreadyFriends = friendships.find(f =>
-    (f.user1 === from && f.user2 === to) || (f.user1 === to && f.user2 === from)
-  );
-  if (!alreadyFriends) {
+app.post('/api/friends/request', async (req, res) => {
+  try {
+    const { from, to, fromName } = req.body;
     const newNotif = {
-      id: Date.now(), type: 'friend_request', from, to,
+      type: 'friend_request', from, to,
       fromName: fromName || from, status: 'unread',
       timestamp: new Date().toISOString()
     };
-    notifications.push(newNotif);
-    saveDB(DB_PATHS.notifications, notifications);
+    await db.collection('notifications').add(newNotif);
     const targetSocket = onlineUsers.get(to);
     if (targetSocket) io.to(targetSocket).emit('notification', newNotif);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json({ success: true });
 });
 
-app.get('/api/notifications/:userId', (req, res) => {
-  const { userId } = req.params;
-  res.json(notifications.filter(n => n.to === userId));
+app.get('/api/notifications/:userId', async (req, res) => {
+  try {
+    const snapshot = await db.collection('notifications')
+      .where('to', '==', req.params.userId)
+      .limit(20)
+      .get();
+    res.json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/notifications/:id/accept', (req, res) => {
-  const notifId = Number(req.params.id);
-  const notif = notifications.find(n => n.id === notifId);
-  if (notif && notif.type === 'friend_request') {
-    notif.status = 'accepted';
-    // Avoid duplicate friendships
-    const exists = friendships.find(f =>
-      (f.user1 === notif.from && f.user2 === notif.to) ||
-      (f.user1 === notif.to && f.user2 === notif.from)
-    );
-    if (!exists) {
-      friendships.push({ user1: notif.from, user2: notif.to });
-      saveDB(DB_PATHS.friendships, friendships);
+app.post('/api/notifications/:id/accept', async (req, res) => {
+  try {
+    const notifRef = db.collection('notifications').doc(req.params.id);
+    const notif = await notifRef.get();
+    if (notif.exists && notif.data().type === 'friend_request') {
+      await notifRef.update({ status: 'accepted' });
+      await db.collection('friendships').add({
+        user1: notif.data().from,
+        user2: notif.data().to,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      io.emit('friendship_updated', { user1: notif.data().from, user2: notif.data().to });
     }
-    saveDB(DB_PATHS.notifications, notifications);
-    io.emit('friendship_updated', { user1: notif.from, user2: notif.to });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json({ success: true });
 });
 
-app.post('/api/notifications/:id/clear', (req, res) => {
-  const notifId = Number(req.params.id);
-  notifications = notifications.filter(n => n.id !== notifId);
-  saveDB(DB_PATHS.notifications, notifications);
-  res.json({ success: true });
+app.post('/api/users/profile', async (req, res) => {
+  try {
+    const { userId, displayName, photoURL, email } = req.body;
+    await db.collection('users').doc(userId).set({
+      displayName, photoURL, email,
+      lastSeen: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/users/profile', (req, res) => {
-  const { userId, displayName, photoURL, email } = req.body;
-  users[userId] = { ...users[userId], displayName, photoURL, email };
-  saveDB(DB_PATHS.users, users);
-  res.json({ success: true });
+app.get('/api/friends/:userId', async (req, res) => {
+  try {
+    const uid = req.params.userId;
+    const s1 = await db.collection('friendships').where('user1', '==', uid).get();
+    const s2 = await db.collection('friendships').where('user2', '==', uid).get();
+
+    const friendIds = [
+      ...s1.docs.map(d => d.data().user2),
+      ...s2.docs.map(d => d.data().user1)
+    ];
+
+    const friends = [];
+    for (const fId of friendIds) {
+      const uDoc = await db.collection('users').doc(fId).get();
+      const profile = uDoc.data() || {};
+      friends.push({
+        id: fId,
+        displayName: profile.displayName || profile.email?.split('@')[0] || 'HallWay User',
+        photoURL: profile.photoURL || null,
+        email: profile.email || '',
+        status: onlineUsers.has(fId) ? 'online' : 'offline'
+      });
+    }
+    res.json(friends);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get('/api/friends/:userId', (req, res) => {
-  const { userId } = req.params;
-  const userFriends = friendships
-    .filter(f => f.user1 === userId || f.user2 === userId)
-    .map(f => f.user1 === userId ? f.user2 : f.user1);
+app.get('/api/user-stats/:userId', async (req, res) => {
+  try {
+    const uid = req.params.userId;
+    const postsSnap = await db.collection('posts').where('userId', '==', uid).get();
+    const userDoc = await db.collection('users').doc(uid).get();
 
-  const friendsWithStatus = userFriends.map(fId => {
-    const profile = users[fId] || {};
-    return {
-      id: fId,
-      displayName: profile.displayName || profile.email?.split('@')[0] || 'HallWay User',
-      photoURL: profile.photoURL || null,
-      email: profile.email || '',
-      status: onlineUsers.has(fId) ? 'online' : 'offline'
-    };
-  });
-  res.json(friendsWithStatus);
+    res.json({
+      posts: postsSnap.size,
+      likes: postsSnap.docs.reduce((acc, d) => acc + (d.data().likes?.length || 0), 0),
+      profile: userDoc.data() || {}
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get('/api/user-stats/:userId', (req, res) => {
-  const userId = req.params.userId;
-  const userPosts = posts.filter(p => p.userId === userId);
-  const totalReceivedLikes = userPosts.reduce((acc, p) => acc + (p.likes?.length || 0), 0);
-  const friendCount = friendships.filter(f => f.user1 === userId || f.user2 === userId).length;
-  res.json({
-    posts: userPosts.length,
-    boards: new Set(userPosts.map(p => p.boardId)).size,
-    likes: totalReceivedLikes,
-    friends: friendCount,
-    profile: users[userId] || {}
-  });
-});
-
-app.get('/api/recent-posts', (req, res) => {
-  res.json([...posts].reverse().slice(0, 5));
+app.get('/api/recent-posts', async (req, res) => {
+  try {
+    const snapshot = await db.collection('posts').orderBy('createdAt', 'desc').limit(5).get();
+    res.json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─────────────────────────────────────────────
 //  CHAT ENDPOINTS
 // ─────────────────────────────────────────────
-app.get('/api/messages/:user1/:user2', (req, res) => {
-  const { user1, user2 } = req.params;
-  const convo = messages.filter(m =>
-    (m.from === user1 && m.to === user2) || (m.from === user2 && m.to === user1)
-  );
-  res.json(convo);
+app.get('/api/messages/:user1/:user2', async (req, res) => {
+  try {
+    const { user1, user2 } = req.params;
+    const s1 = await db.collection('messages')
+      .where('from', '==', user1).where('to', '==', user2).get();
+    const s2 = await db.collection('messages')
+      .where('from', '==', user2).where('to', '==', user1).get();
+
+    const messages = [...s1.docs, ...s2.docs]
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/messages', (req, res) => {
-  const { from, to, text, fromName } = req.body;
-  const msg = { id: Date.now(), from, to, text, fromName, timestamp: new Date().toISOString() };
-  messages.push(msg);
-  saveDB(DB_PATHS.messages, messages);
-
-  const targetSocket = onlineUsers.get(to);
-  if (targetSocket) {
-    io.to(targetSocket).emit('receive_message', msg);
-    const notif = {
-      id: Date.now() + 1, type: 'message', from, to,
-      fromName: fromName || 'Someone', status: 'unread', timestamp: msg.timestamp
+app.post('/api/messages', async (req, res) => {
+  try {
+    const { from, to, text, fromName } = req.body;
+    const msg = {
+      from, to, text, fromName,
+      timestamp: new Date().toISOString()
     };
-    notifications.push(notif);
-    saveDB(DB_PATHS.notifications, notifications);
-    io.to(targetSocket).emit('notification', notif);
+    const docRef = await db.collection('messages').add(msg);
+    const savedMsg = { id: docRef.id, ...msg };
+
+    const targetSocket = onlineUsers.get(to);
+    if (targetSocket) {
+      io.to(targetSocket).emit('receive_message', savedMsg);
+      const notif = {
+        type: 'message', from, to,
+        fromName: fromName || 'Someone', status: 'unread', timestamp: msg.timestamp
+      };
+      await db.collection('notifications').add(notif);
+      io.to(targetSocket).emit('notification', notif);
+    }
+    res.json(savedMsg);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json(msg);
 });
 
 // ─────────────────────────────────────────────
@@ -404,10 +350,6 @@ io.on('connection', (socket) => {
   socket.on('join_hallway', (userId) => {
     onlineUsers.set(userId, socket.id);
     io.emit('online_status_change', { userId, status: 'online' });
-  });
-
-  socket.on('typing', ({ boardId, userName }) => {
-    socket.broadcast.emit('user_typing', { boardId, userName });
   });
 
   socket.on('disconnect', () => {
@@ -421,16 +363,4 @@ io.on('connection', (socket) => {
   });
 });
 
-// Graceful shutdown — save everything before exit
-process.on('SIGINT', () => {
-  console.log('\nSaving data before shutdown...');
-  saveDB(DB_PATHS.boards, boards);
-  saveDB(DB_PATHS.posts, posts);
-  saveDB(DB_PATHS.friendships, friendships);
-  saveDB(DB_PATHS.notifications, notifications);
-  saveDB(DB_PATHS.users, users);
-  saveDB(DB_PATHS.messages, messages);
-  process.exit(0);
-});
-
-server.listen(PORT, () => console.log(`✅ HallWay server running on http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`✅ HallWay server running on Port ${PORT}`));

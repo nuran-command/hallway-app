@@ -153,8 +153,8 @@ function Boards({ boards, onBoardCreated }) {
                   </div>
                 </div>
                 <div className="board-card-body">
-                  <h3 className="board-name">{b.name}</h3>
-                  <p className="board-description">{b.description || `Discussion board for ${b.name}`}</p>
+                  <h3 className="board-name">{b.name || 'Untitled Board'}</h3>
+                  <p className="board-description">{b.description || `Community board for students interested in ${b.name || 'this topic'}.`}</p>
                 </div>
                 <div className="board-card-footer">
                   <span className="join-text">View Discussions</span>

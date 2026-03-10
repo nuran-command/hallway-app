@@ -64,7 +64,11 @@ export default function TopHeader({ user, socket, onLogout, sidebarOpen, setSide
     return (
         <header className="top-header">
             <div className="header-left">
-                <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                <button
+                    className="menu-toggle"
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    style={{ display: 'flex', opacity: 1 }}
+                >
                     ☰
                 </button>
                 <div className="header-search-dummy">

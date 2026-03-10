@@ -125,11 +125,12 @@ function BoardPage({ socket, boards }) {
         displayName: auth.currentUser.displayName
       };
 
-      await fetch(`${API_URL}/api/posts`, {
+      const res = await fetch(`${API_URL}/api/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newPostData)
       });
+      if (!res.ok) throw new Error("Failed to create post on server");
 
       setText("");
       setFile(null);
@@ -151,6 +152,8 @@ function BoardPage({ socket, boards }) {
           fromName: auth.currentUser.displayName || auth.currentUser.email?.split('@')[0]
         })
       });
+      if (!res.ok) throw new Error("Could not toggle like");
+
       const data = await res.json();
       setPosts(posts.map(p => p.id === postId ? { ...p, likes: data.likes } : p));
     } catch (err) {
@@ -160,7 +163,8 @@ function BoardPage({ socket, boards }) {
 
   const deletePost = async (postId) => {
     try {
-      await fetch(`${API_URL}/api/posts/${postId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/posts/${postId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error("Could not delete post");
       setPosts(posts.filter(p => p.id !== postId));
     } catch (err) {
       console.log("Delete error:", err);
@@ -175,11 +179,13 @@ function BoardPage({ socket, boards }) {
 
   const saveEditPost = async (postId) => {
     try {
-      await fetch(`${API_URL}/api/posts/${postId}`, {
+      const res = await fetch(`${API_URL}/api/posts/${postId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: editPostText })
       });
+      if (!res.ok) throw new Error("Could not save edit");
+
       setPosts(posts.map(p => p.id === postId ? { ...p, text: editPostText } : p));
       setEditingPostId(null);
     } catch (err) {
@@ -201,8 +207,18 @@ function BoardPage({ socket, boards }) {
           text: commentText
         })
       });
+      if (!res.ok) throw new Error("Failed to post comment");
+
       const newComment = await res.json();
-      setPosts(posts.map(p => p.id === postId ? { ...p, comments: [...(p.comments || []), newComment] } : p));
+      // Socket will also broadcast this, but updating locally avoids a visual jump
+      setPosts(posts.map(p => {
+        if (p.id === postId) {
+          // Prevent exact duplicate if socket arrives early
+          const exists = p.comments?.find(c => c.id === newComment.id);
+          if (!exists) return { ...p, comments: [...(p.comments || []), newComment] };
+        }
+        return p;
+      }));
     } catch (err) {
       console.log("Comment error:", err);
     }

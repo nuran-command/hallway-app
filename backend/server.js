@@ -199,10 +199,11 @@ app.post('/api/posts', async (req, res) => {
       displayName: displayName || null,
       likes: [],
       comments: [],
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
+      createdAt: admin.firestore.FieldValue.serverTimestamp() // Firestore will convert this to a timestamp
     };
     const docRef = await db.collection('posts').add(newPost);
-    const savedPost = { id: docRef.id, ...newPost };
+    // Send back ISO string for instant valid date rendering on frontend
+    const savedPost = { ...newPost, id: docRef.id, createdAt: admin.firestore.Timestamp.now().toDate().toISOString() };
     io.emit('new_post', savedPost);
     res.json(savedPost);
   } catch (err) {

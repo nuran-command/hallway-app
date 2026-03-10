@@ -18,7 +18,12 @@ import { io } from 'socket.io-client';
 import Onboarding from './components/Onboarding';
 import { API_URL } from './config';
 
-const socket = io(API_URL);
+const socket = io(API_URL, {
+  transports: ['websocket', 'polling'], // Fallback to polling if websocket fails
+  reconnection: true,                   // Force aggressive reconnection
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
+});
 
 export default function App() {
   const [boards, setBoards] = React.useState([]);

@@ -168,21 +168,25 @@ app.get('/api/ping', (req, res) => {
 // ─────────────────────────────────────────────
 app.get('/api/posts', async (req, res) => {
   try {
-    const boardId = req.query.boardId;
-    if (!boardId) return res.json([]);
+    const { boardId, userId } = req.query;
+    let query = db.collection('posts');
 
-    // Simplified query to avoid Composite Index error on start
-    const snapshot = await db.collection('posts')
-      .where('boardId', '==', boardId)
-      .get();
+    if (boardId) query = query.where('boardId', '==', boardId);
+    if (userId) query = query.where('userId', '==', userId);
 
-    let posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    // Manual sort if index is not ready
-    posts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    const snapshot = await query.get();
+    let postsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    res.json(posts);
+    // Sort by newest first
+    postsList.sort((a, b) => {
+      const timeA = a.createdAt?.seconds || new Date(a.createdAt).getTime() / 1000 || 0;
+      const timeB = b.createdAt?.seconds || new Date(b.createdAt).getTime() / 1000 || 0;
+      return timeB - timeA;
+    });
+
+    res.json(postsList);
   } catch (err) {
-    console.error("GET /api/posts Error:", err);
+    console.error("GET Posts Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -418,11 +422,21 @@ app.get('/api/friends/:userId', async (req, res) => {
 app.get('/api/user-stats/:userId', async (req, res) => {
   try {
     const uid = req.params.userId;
+
+    // Fetch counts
     const postsSnap = await db.collection('posts').where('userId', '==', uid).get();
+    const boardsSnap = await db.collection('boards').where('createdBy', '==', uid).get();
+    const friendsSnap = await db.collection('friendships')
+      .where('users', 'array-contains', uid)
+      .where('status', '==', 'accepted')
+      .get();
+
     const userDoc = await db.collection('users').doc(uid).get();
 
     res.json({
       posts: postsSnap.size,
+      boards: boardsSnap.size,
+      friends: friendsSnap.size,
       likes: postsSnap.docs.reduce((acc, d) => acc + (d.data().likes?.length || 0), 0),
       profile: userDoc.data() || {}
     });

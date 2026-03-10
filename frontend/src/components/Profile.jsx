@@ -22,7 +22,8 @@ export default function Profile() {
     const [displayName, setDisplayName] = useState('');
     const [email, setEmail] = useState('');
     const [bio, setBio] = useState('Enthusiastic student and explorer of ideas.');
-    const [stats, setStats] = useState({ posts: 0, boards: 0, likes: 0 });
+    const [stats, setStats] = useState({ posts: 0, boards: 0, likes: 0, friends: 0 });
+    const [userPosts, setUserPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isFriend, setIsFriend] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -34,26 +35,38 @@ export default function Profile() {
 
             const fetchProfile = async () => {
                 try {
+                    // Slight delay for backend consistency
+                    await new Promise(r => setTimeout(r, 1000));
                     const statsRes = await fetch(`${API_URL}/api/user-stats/${targetUserId}`);
+                    if (!statsRes.ok) throw new Error("Stats load error");
                     const data = await statsRes.json();
                     setStats(data);
 
+                    if (data.profile) {
+                        setDisplayName(data.profile.displayName || (isOwner ? currentUser.displayName : 'Student'));
+                        setPhotoURL(data.profile.photoURL || '');
+                        if (!isOwner) {
+                            setBio(data.profile.bio || 'This user is part of the HallWay community.');
+                        }
+                    }
+
                     if (currentUser && !isOwner) {
-                        const friendsRes = await fetch(`${API_URL}/api/friends/${currentUser.uid}`);
-                        const friends = await friendsRes.json();
-                        setIsFriend(friends.some(f => f.id === targetUserId));
+                        try {
+                            const friendsRes = await fetch(`${API_URL}/api/friends/${currentUser.uid}`);
+                            if (friendsRes.ok) {
+                                const friends = await friendsRes.json();
+                                setIsFriend(friends.some(f => f.id === targetUserId));
+                            }
+                        } catch (e) {
+                            console.log("Friend check delayed...");
+                        }
                     }
 
                     if (isOwner) {
-                        setDisplayName(currentUser?.displayName || '');
-                        setPhotoURL(currentUser?.photoURL || '');
+                        setDisplayName(currentUser?.displayName || data.profile?.displayName || '');
+                        setPhotoURL(currentUser?.photoURL || data.profile?.photoURL || '');
                         setEmail(currentUser?.email || '');
-                        setBio(localStorage.getItem(`bio_${currentUser?.uid}`) || 'Enthusiastic student and explorer of ideas.');
-                    } else {
-                        setDisplayName(data.displayName || 'Student');
-                        setPhotoURL(data.photoURL || '');
-                        setEmail('•••••@•••••.com');
-                        setBio('This user has shared their passion for learning with the HallWay community.');
+                        setBio(localStorage.getItem(`bio_${currentUser?.uid}`) || data.profile?.bio || 'Enthusiastic student.');
                     }
                 } catch (err) {
                     console.error("Error fetching stats:", err);
@@ -62,7 +75,20 @@ export default function Profile() {
                 }
             };
 
+            const fetchUserPosts = async () => {
+                try {
+                    const res = await fetch(`${API_URL}/api/posts?userId=${targetUserId}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setUserPosts(Array.isArray(data) ? data : []);
+                    }
+                } catch (err) {
+                    console.error("Error fetching user posts:", err);
+                }
+            };
+
             fetchProfile();
+            fetchUserPosts();
         }
     }, [targetUserId, isOwner, currentUser]);
 
@@ -276,6 +302,22 @@ export default function Profile() {
                             })()}
                         </div>
 
+                        {/* Recent User Activity List */}
+                        <div className="card profile-activity-card" style={{ gridColumn: '1 / -1' }}>
+                            <h3 style={{ marginBottom: '16px' }}>Recent Activity</h3>
+                            <div className="activity-list">
+                                {userPosts.length > 0 ? userPosts.map(post => (
+                                    <div key={post.id} className="activity-item" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '16px' }}>
+                                        <p>{post.text}</p>
+                                        <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '8px' }}>
+                                            {new Date(post.createdAt?.seconds ? post.createdAt.seconds * 1000 : post.createdAt).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <p style={{ textAlign: 'center', opacity: 0.5, padding: '24px' }}>No posts yet from this student.</p>
+                                )}
+                            </div>
+                        </div>
                     </>
                 ) : (
                     <div className="card profile-private-card" style={{ gridColumn: '1 / -1', padding: '64px 24px', textAlign: 'center' }}>

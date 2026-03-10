@@ -19,10 +19,10 @@ import Onboarding from './components/Onboarding';
 import { API_URL } from './config';
 
 const socket = io(API_URL, {
-  transports: ['websocket', 'polling'], // Fallback to polling if websocket fails
-  reconnection: true,                   // Force aggressive reconnection
-  reconnectionAttempts: Infinity,
-  reconnectionDelay: 1000,
+  transports: ['polling', 'websocket'], // Robust fallback
+  reconnection: true,
+  reconnectionAttempts: 10,
+  reconnectionDelay: 2000,
 });
 
 export default function App() {
@@ -61,17 +61,19 @@ export default function App() {
     const unsub = onAuthStateChanged(auth, currentUser => {
       setUser(currentUser);
       if (currentUser) {
-        // Sync user info with backend
-        fetch(`${API_URL}/api/users/profile`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: currentUser.uid,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-            email: currentUser.email
-          })
-        });
+        // Delay slightly for backend startup 
+        setTimeout(() => {
+          fetch(`${API_URL}/api/users/profile`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              uid: currentUser.uid,
+              displayName: currentUser.displayName,
+              photoURL: currentUser.photoURL,
+              email: currentUser.email
+            })
+          }).catch(e => console.log("Profile Sync Waiting..."));
+        }, 2000);
       }
       setLoadingUser(false);
     });
@@ -99,14 +101,18 @@ export default function App() {
 
 
   React.useEffect(() => {
-    // Delay initial fetch slightly on localhost to give the backend time to start up
+    // Aggressive startup delay to ensure Render backend is awake
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const delay = isLocal ? 1500 : 0;
+    const startDelay = isLocal ? 1500 : 3000;
 
     setTimeout(() => {
-      fetch(`${API_URL}/api/ping`).then(r => r.json()).then(d => console.log("API Status:", d)).catch(e => console.log("API Starting up..."));
+      fetch(`${API_URL}/api/ping`)
+        .then(r => r.ok ? r.json() : { status: 'retry' })
+        .then(d => console.log("🛰️ Backend Status:", d))
+        .catch(e => console.log("🛰️ Waiting for Backend..."));
+
       fetchBoards();
-    }, delay);
+    }, startDelay);
 
     if (socket) {
       socket.on('board_created', fetchBoards);

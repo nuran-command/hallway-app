@@ -245,6 +245,27 @@ app.post('/api/posts/:id/comment', async (req, res) => {
   }
 });
 
+app.put('/api/posts/:id', async (req, res) => {
+  try {
+    const { text } = req.body;
+    await db.collection('posts').doc(req.params.id).update({ text });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("PUT Post Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/posts/:id', async (req, res) => {
+  try {
+    await db.collection('posts').doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE Post Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─────────────────────────────────────────────
 //  SOCIAL ENDPOINTS
 // ─────────────────────────────────────────────

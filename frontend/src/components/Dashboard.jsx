@@ -125,7 +125,9 @@ export default function Dashboard({ socket, boards }) {
                         <Link to={`/profile/${post.userId}`} className="item-author-link" onClick={(e) => e.stopPropagation()}>
                           <strong>{post.displayName || (post.userEmail ? post.userEmail.split('@')[0] : "Anonymous")}</strong>
                         </Link>
-                        <span>posted on <Link to={`/board/${post.boardId}`} onClick={(e) => e.stopPropagation()}>Board #{post.boardId}</Link></span>
+                        <span>posted on <Link to={`/board/${post.boardId}`} onClick={(e) => e.stopPropagation()}>
+                          {boards?.find(b => String(b.id) === String(post.boardId))?.name || `Board #${post.boardId}`}
+                        </Link></span>
                       </div>
                       <p>{post.text}</p>
                       <div className="item-footer">

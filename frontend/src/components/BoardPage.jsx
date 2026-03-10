@@ -46,13 +46,13 @@ function BoardPage({ socket, boards }) {
 
     // Socket listeners
     socket.on('new_post', (post) => {
-      if (Number(post.boardId) === Number(id)) {
+      if (String(post.boardId) === String(id)) {
         setPosts(prev => [post, ...prev]);
       }
     });
 
     socket.on('user_typing', ({ boardId, userName }) => {
-      if (Number(boardId) === Number(id)) {
+      if (String(boardId) === String(id)) {
         setTypingUser(userName);
         setTimeout(() => setTypingUser(null), 3000);
       }
@@ -200,11 +200,11 @@ function BoardPage({ socket, boards }) {
           <FaArrowLeft /> Back to Boards
         </Link>
         <div className="header-flex">
-          <h2><FaHashtag /> <span>{boards?.find(b => b.id === Number(id))?.name || `Board #${id}`}</span></h2>
+          <h2><FaHashtag /> <span>{boards?.find(b => String(b.id) === String(id))?.name || `Board #${id}`}</span></h2>
           {typingUser && <div className="typing-indicator">{typingUser} is typing...</div>}
         </div>
         <p style={{ color: '#64748b', marginTop: '8px' }}>
-          {boards?.find(b => b.id === Number(id))?.description || 'Join the discussion'}
+          {boards?.find(b => String(b.id) === String(id))?.description || 'Join the discussion'}
         </p>
       </div>
 

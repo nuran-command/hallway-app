@@ -184,7 +184,7 @@ export default function Dashboard({ socket, boards }) {
               <Link to="/boards" className="view-all">See all</Link>
             </div>
             <div className="vertical-grid">
-              {boards.slice(0, 3).map(b => (
+              {Array.isArray(boards) && boards.slice(0, 3).map(b => (
                 <Link key={b.id} to={`/board/${b.id}`} className="board-join-link" style={{ textDecoration: 'none', display: 'block' }}>
                   <div className="card stat-card miniature board-join-item">
                     <div className="mini-icon">

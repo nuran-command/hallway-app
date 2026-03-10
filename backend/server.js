@@ -62,6 +62,7 @@ app.get('/api/boards', async (req, res) => {
     // If no boards, Return empty or default
     res.json(boards);
   } catch (err) {
+    console.error("GET /api/boards Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -81,6 +82,7 @@ app.post('/api/boards', async (req, res) => {
     const docRef = await db.collection('boards').add(newBoard);
     res.json({ id: docRef.id, ...newBoard });
   } catch (err) {
+    console.error("POST /api/boards Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -91,13 +93,20 @@ app.post('/api/boards', async (req, res) => {
 app.get('/api/posts', async (req, res) => {
   try {
     const boardId = req.query.boardId;
+    if (!boardId) return res.json([]);
+
+    // Simplified query to avoid Composite Index error on start
     const snapshot = await db.collection('posts')
       .where('boardId', '==', boardId)
-      .orderBy('createdAt', 'desc')
       .get();
-    const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    let posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Manual sort if index is not ready
+    posts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
     res.json(posts);
   } catch (err) {
+    console.error("GET /api/posts Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -121,6 +130,7 @@ app.post('/api/posts', async (req, res) => {
     io.emit('new_post', savedPost);
     res.json(savedPost);
   } catch (err) {
+    console.error("POST /api/posts Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -157,6 +167,7 @@ app.post('/api/posts/:id/like', async (req, res) => {
     await postRef.update({ likes });
     res.json({ likes });
   } catch (err) {
+    console.error("LIKE Error:", err);
     res.status(500).json({ error: err.message });
   }
 });

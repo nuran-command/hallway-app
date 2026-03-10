@@ -75,7 +75,13 @@ export default function App() {
   const fetchBoards = () => {
     fetch(`${API_URL}/api/boards`)
       .then(res => res.json())
-      .then(data => setBoards(data))
+      .then(data => {
+        if (Array.isArray(data)) {
+          setBoards(data);
+        } else {
+          console.error("Backend returned error for boards:", data);
+        }
+      })
       .catch(err => console.error(err));
   };
 
@@ -122,8 +128,8 @@ export default function App() {
         <div className="page-container">
           <Routes>
             <Route path="/" element={<Dashboard socket={socket} boards={boards} />} />
-            <Route path="/boards" element={<Boards boards={boards} onBoardCreated={fetchBoards} />} />
-            <Route path="/board/:id" element={<BoardPage socket={socket} boards={boards} />} />
+            <Route path="/boards" element={<Boards boards={Array.isArray(boards) ? boards : []} onBoardCreated={fetchBoards} />} />
+            <Route path="/board/:id" element={<BoardPage socket={socket} boards={Array.isArray(boards) ? boards : []} />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />

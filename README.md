@@ -21,11 +21,11 @@
 |  **Likes & Comments** | Interact with community posts; post owners get real-time notifications |
 |  **Direct Messages** | Real-time private chat between friends via Socket.IO |
 |  **Notifications** | Bell panel with typed alerts: friend requests, likes, comments, messages |
-|  **Profile Page** | Avatar upload, bio editing, activity stats + XP/Level gamification system |
+|  **Profile Page** | Avatar upload, bio editing, activity stats + **Recent Activity Feed** |
 |  **Gamification** | XP points, 5-tier level system (Explorer → HallWay Master), earned badges |
 |  **Settings** | Change display name, password, notification preferences, theme, language |
 |  **Dark Mode** | Toggle between light and dark themes, persisted across sessions |
-|  **Data Persistence** | All data saved to JSON files — survives server restarts |
+|  **Data Persistence** | Real-time data sync with **Firebase Cloud Firestore** |
 
 ---
 
@@ -43,7 +43,7 @@
 - **Node.js** + **Express 5** — REST API server
 - **Socket.IO** — WebSocket server for real-time features
 - **Firebase Admin SDK** — server-side Firebase operations
-- **JSON File Storage** — lightweight persistent database (`backend/data/`)
+- **Firebase Cloud Firestore** — Planet-scale NoSQL database for flexible data persistence
 
 ---
 
@@ -75,18 +75,13 @@ StudentNetwork/
 │   └── package.json
 │
 ├── backend/
-│   ├── server.js                       # Express + Socket.IO server
-│   ├── data/                           #  Auto-created, gitignored JSON DB files
-│   │   ├── boards.json
-│   │   ├── posts.json
-│   │   ├── friendships.json
-│   │   ├── notifications.json
-│   │   ├── users.json
-│   │   └── messages.json
+│   ├── server.js                       # Express + Socket.IO server (Firestore Logic)
+│   ├── fix-boards.js                   # 🛠️ Data migration & ownership utility
 │   ├── serviceAccountKey.json          #  Firebase Admin key (gitignored)
 │   └── package.json
 │
 ├── package.json                        # Root scripts (npm run dev)
+├── server.js                           # 🚩 Root Redirector (Ensures Render finds the sub-server)
 └── README.md
 ```
 
@@ -146,7 +141,7 @@ npm run dev          # starts both frontend (port 5173) and backend (port 3000)
 
 Open **http://localhost:5173** in your browser.
 
-> The `backend/data/` directory is created automatically on first run.
+> Data is stored in your Firebase Cloud Firestore instance.
 
 ---
 
@@ -211,10 +206,10 @@ Students earn XP from their activity:
 
 ##  Security Notes
 
-- `backend/serviceAccountKey.json` is **gitignored** — never commit this file
-- `backend/data/` is **gitignored** — contains user data, should not be in version control
-- Firebase Auth handles all password management; the backend never stores passwords
-- Profile data is only visible to the user's friends (privacy wall for non-friends)
+- `backend/serviceAccountKey.json` is **gitignored** — never commit this file. In production (Render), use the `FIREBASE_SERVICE_ACCOUNT` environment variable.
+- Firebase Auth handles all password management; the backend never stores passwords.
+- Data is secured via **Firebase Cloud Firestore** and server-side validation.
+- Profile data is only visible to the user's friends (privacy wall for non-friends).
 
 ---
 

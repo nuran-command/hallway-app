@@ -49,10 +49,30 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
 }
 
 if (serviceAccount) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: "my-student-network-backend.firebasestorage.app"
-  });
+  try {
+    // Log diagnostics (Sanitized)
+    console.log("-----------------------------------------");
+    console.log("Firebase Auth Diagnostics:");
+    console.log("Project ID:", serviceAccount.project_id);
+    console.log("Client Email:", serviceAccount.client_email);
+    console.log("Current Server UTC Time:", new Date().toISOString());
+    console.log("-----------------------------------------");
+
+    if (serviceAccount.private_key) {
+      // Very robust cleaning for both env vars and manual file edits
+      serviceAccount.private_key = serviceAccount.private_key
+        .replace(/\\n/g, '\n')      // Handle literal \n (backslash + n)
+        .replace(/\n\s+/g, '\n');   // Remove accidental spaces after newlines
+    }
+
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      storageBucket: "my-student-network-backend.firebasestorage.app"
+    });
+    console.log("✅ Firebase Admin SDK initialized successfully.");
+  } catch (err) {
+    console.error("FATAL: Firebase Admin SDK failed to initialize:", err.message);
+  }
 }
 
 const db = admin.firestore();

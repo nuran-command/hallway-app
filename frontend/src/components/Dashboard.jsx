@@ -23,11 +23,11 @@ export default function Dashboard({ socket, boards }) {
       try {
         const postsRes = await fetch(`${API_URL}/api/recent-posts`);
         const postsData = await postsRes.json();
-        setRecentPosts(postsData);
+        if (Array.isArray(postsData)) setRecentPosts(postsData);
 
         const friendsRes = await fetch(`${API_URL}/api/friends/${currentUser.uid}`);
         const friendsData = await friendsRes.json();
-        setFriends(friendsData);
+        if (Array.isArray(friendsData)) setFriends(friendsData);
       } catch (err) {
         console.error(err);
       } finally {

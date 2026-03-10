@@ -1,3 +1,20 @@
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',')
+      : ["http://localhost:5173", "http://localhost:3000"],
+    methods: ["GET", "POST", "DELETE", "PUT"]
+  }
+});
+
 const admin = require('firebase-admin');
 
 // Handle Firebase Service Account for Render / Local

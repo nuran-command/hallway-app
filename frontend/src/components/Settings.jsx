@@ -46,7 +46,7 @@ export default function Settings() {
         try {
             await updateProfile(currentUser, { displayName: displayName.trim() });
             // Sync to backend
-            await fetch('${API_URL}/api/users/profile', {
+            await fetch(`${API_URL}/api/users/profile`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

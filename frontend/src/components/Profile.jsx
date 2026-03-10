@@ -68,7 +68,7 @@ export default function Profile() {
 
     const handleAddFriend = async () => {
         try {
-            await fetch('${API_URL}/api/friends/request', {
+            await fetch(`${API_URL}/api/friends/request`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -146,7 +146,7 @@ export default function Profile() {
                         {uploading && <div className="avatar-loader"></div>}
                     </div>
                     <div className="profile-title-group">
-                        <h2 className="profile-name-text">{displayName || email.split('@')[0] || 'HallWay Explorer'}</h2>
+                        <h2 className="profile-name-text">{displayName || (email ? email.split('@')[0] : 'HallWay Explorer')}</h2>
                         <p className="profile-email-text">{email}</p>
                     </div>
                     {isOwner ? (
@@ -211,18 +211,18 @@ export default function Profile() {
                                     <span className="stat-label">BOARDS</span>
                                 </div>
                                 <div className="stat-box">
-                                    <span className="stat-number">{stats.likes || 0}</span>
+                                    <span className="stat-number">{stats?.likes || 0}</span>
                                     <span className="stat-label">LIKES</span>
                                 </div>
                                 <div className="stat-box">
-                                    <span className="stat-number">{stats.friends || 0}</span>
+                                    <span className="stat-number">{stats?.friends || 0}</span>
                                     <span className="stat-label">FRIENDS</span>
                                 </div>
                             </div>
 
                             {/* XP & Level Gamification */}
                             {(() => {
-                                const xp = (stats.posts * 50) + ((stats.likes || 0) * 5);
+                                const xp = ((stats?.posts || 0) * 50) + ((stats?.likes || 0) * 5);
                                 const levels = [
                                     { name: 'Explorer', min: 0, max: 100, color: '#64748b' },
                                     { name: 'Contributor', min: 100, max: 300, color: '#6366f1' },
@@ -233,7 +233,7 @@ export default function Profile() {
                                 const level = levels.findLast(l => xp >= l.min) || levels[0];
                                 const nextLevel = levels[levels.indexOf(level) + 1];
                                 const progress = nextLevel
-                                    ? Math.min(100, ((xp - level.min) / (nextLevel.min - level.min)) * 100)
+                                    ? Math.min(100, Math.max(0, ((xp - (level?.min || 0)) / ((nextLevel?.min || 1) - (level?.min || 0))) * 100))
                                     : 100;
                                 return (
                                     <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-color)' }}>

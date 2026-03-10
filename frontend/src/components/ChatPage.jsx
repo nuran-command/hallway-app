@@ -65,7 +65,7 @@ export default function ChatPage({ socket }) {
             text: inputText.trim(),
             fromName: currentUser.displayName || currentUser.email?.split('@')[0]
         };
-        const res = await fetch('${API_URL}/api/messages', {
+        const res = await fetch(`${API_URL}/api/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)

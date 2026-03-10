@@ -31,7 +31,7 @@ function Boards({ boards, onBoardCreated }) {
     setCreating(true);
     try {
       const payload = { ...newBoard, createdBy: auth.currentUser?.uid };
-      const res = await fetch('${API_URL}/api/boards', {
+      const res = await fetch(`${API_URL}/api/boards`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

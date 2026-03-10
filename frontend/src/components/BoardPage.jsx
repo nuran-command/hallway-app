@@ -66,7 +66,7 @@ function BoardPage({ socket, boards }) {
 
   const handleAddFriend = async (toUserId) => {
     try {
-      await fetch('${API_URL}/api/friends/request', {
+      await fetch(`${API_URL}/api/friends/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

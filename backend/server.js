@@ -20,7 +20,22 @@ const admin = require('firebase-admin');
 // Handle Firebase Service Account for Render / Local
 let serviceAccount;
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  try {
+    let raw = process.env.FIREBASE_SERVICE_ACCOUNT.trim();
+    // Sometimes people copy-paste with quotes at the beginning/end
+    if (raw.startsWith('"') && raw.endsWith('"')) raw = raw.slice(1, -1);
+
+    serviceAccount = JSON.parse(raw);
+    console.log("Found Firebase Credentials for project:", serviceAccount.project_id);
+
+    if (serviceAccount.private_key) {
+      // Fix for literal \n vs escaped \n
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+  } catch (err) {
+    console.error("FATAL: Failed to parse FIREBASE_SERVICE_ACCOUNT env var. Re-check your Render Environment Variables!");
+    console.error("The error was:", err.message);
+  }
 } else {
   try {
     serviceAccount = require('./serviceAccountKey.json');

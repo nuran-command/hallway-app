@@ -16,10 +16,7 @@ import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { io } from 'socket.io-client';
 import Onboarding from './components/Onboarding';
-
-const API_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000'
-  : 'https://YOUR-RENDER-APP-NAME.onrender.com'; // <--- REPLACE THIS WITH YOUR RENDER LINK
+import { API_URL } from './config';
 
 const socket = io(API_URL);
 

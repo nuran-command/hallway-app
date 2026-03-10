@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '../themeStore';
 import { auth } from '../firebase';
 import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { API_URL } from '../config';
 import {
     FaMoon, FaSun, FaBell, FaLock, FaUser, FaLanguage,
     FaSave, FaKey, FaCheck, FaExclamationTriangle, FaShieldAlt
@@ -45,7 +46,7 @@ export default function Settings() {
         try {
             await updateProfile(currentUser, { displayName: displayName.trim() });
             // Sync to backend
-            await fetch('http://localhost:3000/api/users/profile', {
+            await fetch('${API_URL}/api/users/profile', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

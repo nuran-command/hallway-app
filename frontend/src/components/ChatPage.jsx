@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FaPaperPlane, FaCircle, FaComments, FaArrowLeft } from 'react-icons/fa';
 import { auth } from '../firebase';
+import { API_URL } from '../config';
 import './ChatPage.css';
 
 export default function ChatPage({ socket }) {
@@ -20,7 +21,7 @@ export default function ChatPage({ socket }) {
 
     useEffect(() => {
         if (!currentUser) return;
-        fetch(`http://localhost:3000/api/friends/${currentUser.uid}`)
+        fetch(`${API_URL}/api/friends/${currentUser.uid}`)
             .then(r => r.json())
             .then(data => {
                 setFriends(data);
@@ -37,7 +38,7 @@ export default function ChatPage({ socket }) {
     useEffect(() => {
         if (!activeFriend || !currentUser) return;
         setLoading(true);
-        fetch(`http://localhost:3000/api/messages/${currentUser.uid}/${activeFriend.id}`)
+        fetch(`${API_URL}/api/messages/${currentUser.uid}/${activeFriend.id}`)
             .then(r => r.json())
             .then(data => { setMessages(data); setLoading(false); });
     }, [activeFriend]);
@@ -64,7 +65,7 @@ export default function ChatPage({ socket }) {
             text: inputText.trim(),
             fromName: currentUser.displayName || currentUser.email?.split('@')[0]
         };
-        const res = await fetch('http://localhost:3000/api/messages', {
+        const res = await fetch('${API_URL}/api/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)

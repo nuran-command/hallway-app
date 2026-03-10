@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaBell, FaCheck, FaTimes, FaUser, FaThumbsUp, FaComment, FaEnvelope } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { API_URL } from '../config';
 import './TopHeader.css';
 
 export default function TopHeader({ user, socket, onLogout, sidebarOpen, setSidebarOpen }) {
@@ -11,7 +12,7 @@ export default function TopHeader({ user, socket, onLogout, sidebarOpen, setSide
 
     const fetchNotifications = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/notifications/${user.uid}`);
+            const res = await fetch(`${API_URL}/api/notifications/${user.uid}`);
             if (res.ok) {
                 const data = await res.json();
                 if (Array.isArray(data)) {
@@ -42,7 +43,7 @@ export default function TopHeader({ user, socket, onLogout, sidebarOpen, setSide
 
     const handleAccept = async (id) => {
         try {
-            await fetch(`http://localhost:3000/api/notifications/${id}/accept`, { method: 'POST' });
+            await fetch(`${API_URL}/api/notifications/${id}/accept`, { method: 'POST' });
             setNotifications(notifications.map(n => n.id === id ? { ...n, status: 'accepted' } : n));
         } catch (err) {
             console.error(err);
@@ -51,7 +52,7 @@ export default function TopHeader({ user, socket, onLogout, sidebarOpen, setSide
 
     const handleClear = async (id) => {
         try {
-            await fetch(`http://localhost:3000/api/notifications/${id}/clear`, { method: 'POST' });
+            await fetch(`${API_URL}/api/notifications/${id}/clear`, { method: 'POST' });
             setNotifications(notifications.filter(n => n.id !== id));
         } catch (err) {
             console.error(err);

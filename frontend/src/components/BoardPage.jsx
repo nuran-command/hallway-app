@@ -5,6 +5,7 @@ import { storage, auth } from "../firebase";
 import ReactMarkdown from 'react-markdown';
 import Skeleton from './Skeleton';
 import { FaHashtag, FaImage, FaTrash, FaThumbsUp, FaRegComment, FaShareAlt, FaArrowLeft, FaTimes, FaUserPlus, FaEdit } from "react-icons/fa";
+import { API_URL } from '../config';
 import './BoardPage.css';
 
 function BoardPage({ socket, boards }) {
@@ -24,12 +25,12 @@ function BoardPage({ socket, boards }) {
   const loadData = async () => {
     setLoadingPosts(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/posts?boardId=${id}`);
+      const res = await fetch(`${API_URL}/api/posts?boardId=${id}`);
       const data = await res.json();
       setPosts(data.reverse());
 
       if (auth.currentUser) {
-        const friendsRes = await fetch(`http://localhost:3000/api/friends/${auth.currentUser.uid}`);
+        const friendsRes = await fetch(`${API_URL}/api/friends/${auth.currentUser.uid}`);
         const friendsData = await friendsRes.json();
         setFriends(friendsData);
       }
@@ -65,7 +66,7 @@ function BoardPage({ socket, boards }) {
 
   const handleAddFriend = async (toUserId) => {
     try {
-      await fetch('http://localhost:3000/api/friends/request', {
+      await fetch('${API_URL}/api/friends/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -109,7 +110,7 @@ function BoardPage({ socket, boards }) {
         displayName: auth.currentUser.displayName
       };
 
-      await fetch(`http://localhost:3000/api/posts`, {
+      await fetch(`${API_URL}/api/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newPostData)
@@ -127,7 +128,7 @@ function BoardPage({ socket, boards }) {
 
   const toggleLike = async (postId) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/posts/${postId}/like`, {
+      const res = await fetch(`${API_URL}/api/posts/${postId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -144,7 +145,7 @@ function BoardPage({ socket, boards }) {
 
   const deletePost = async (postId) => {
     try {
-      await fetch(`http://localhost:3000/api/posts/${postId}`, { method: 'DELETE' });
+      await fetch(`${API_URL}/api/posts/${postId}`, { method: 'DELETE' });
       setPosts(posts.filter(p => p.id !== postId));
     } catch (err) {
       console.log("Delete error:", err);
@@ -159,7 +160,7 @@ function BoardPage({ socket, boards }) {
 
   const saveEditPost = async (postId) => {
     try {
-      await fetch(`http://localhost:3000/api/posts/${postId}`, {
+      await fetch(`${API_URL}/api/posts/${postId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: editPostText })
@@ -175,7 +176,7 @@ function BoardPage({ socket, boards }) {
   const addComment = async (postId, commentText) => {
     if (!commentText.trim()) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/posts/${postId}/comment`, {
+      const res = await fetch(`${API_URL}/api/posts/${postId}/comment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

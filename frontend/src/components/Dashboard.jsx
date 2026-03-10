@@ -4,6 +4,7 @@ import { FaHashtag, FaUsers, FaArrowRight, FaPlus, FaRocket, FaRegComment, FaHis
 import HallwayLogo from "./HallwayLogo";
 import Skeleton from "./Skeleton";
 import { auth } from "../firebase";
+import { API_URL } from '../config';
 import "./Dashboard.css";
 
 export default function Dashboard({ socket, boards }) {
@@ -20,11 +21,11 @@ export default function Dashboard({ socket, boards }) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const postsRes = await fetch("http://localhost:3000/api/recent-posts");
+        const postsRes = await fetch("${API_URL}/api/recent-posts");
         const postsData = await postsRes.json();
         setRecentPosts(postsData);
 
-        const friendsRes = await fetch(`http://localhost:3000/api/friends/${currentUser.uid}`);
+        const friendsRes = await fetch(`${API_URL}/api/friends/${currentUser.uid}`);
         const friendsData = await friendsRes.json();
         setFriends(friendsData);
       } catch (err) {
@@ -55,7 +56,7 @@ export default function Dashboard({ socket, boards }) {
 
   const handleAddFriend = async (toUserId) => {
     try {
-      await fetch('http://localhost:3000/api/friends/request', {
+      await fetch('${API_URL}/api/friends/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ from: currentUser.uid, to: toUserId, fromName: currentUser.displayName || currentUser.email })

@@ -12,10 +12,13 @@ const PORT = 3000;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin: process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',')
+      : ["http://localhost:5173", "http://localhost:3000"],
     methods: ["GET", "POST", "DELETE", "PUT"]
   }
 });
+
 
 const admin = require('firebase-admin');
 
@@ -42,7 +45,11 @@ if (serviceAccount) {
 const bucket = admin.storage().bucket();
 
 // middlewares
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : ["http://localhost:5173", "http://localhost:3000"]
+}));
 app.use(express.json());
 
 // ─────────────────────────────────────────────

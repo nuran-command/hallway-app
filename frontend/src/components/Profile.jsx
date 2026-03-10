@@ -6,6 +6,7 @@ import { FaUser, FaEnvelope, FaIdCard, FaEdit, FaSave, FaArrowLeft, FaRocket, Fa
 import HallwayLogo from './HallwayLogo';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
+import { API_URL } from '../config';
 import './Profile.css';
 
 export default function Profile() {
@@ -33,12 +34,12 @@ export default function Profile() {
 
             const fetchProfile = async () => {
                 try {
-                    const statsRes = await fetch(`http://localhost:3000/api/user-stats/${targetUserId}`);
+                    const statsRes = await fetch(`${API_URL}/api/user-stats/${targetUserId}`);
                     const data = await statsRes.json();
                     setStats(data);
 
                     if (currentUser && !isOwner) {
-                        const friendsRes = await fetch(`http://localhost:3000/api/friends/${currentUser.uid}`);
+                        const friendsRes = await fetch(`${API_URL}/api/friends/${currentUser.uid}`);
                         const friends = await friendsRes.json();
                         setIsFriend(friends.some(f => f.id === targetUserId));
                     }
@@ -67,7 +68,7 @@ export default function Profile() {
 
     const handleAddFriend = async () => {
         try {
-            await fetch('http://localhost:3000/api/friends/request', {
+            await fetch('${API_URL}/api/friends/request', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

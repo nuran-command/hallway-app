@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaHashtag, FaSearch, FaPlus, FaUsers, FaArrowRight, FaTimes, FaEdit, FaTrash } from "react-icons/fa";
 import Skeleton from "./Skeleton";
 import { auth } from "../firebase";
+import { API_URL } from '../config';
 import "./Boards.css";
 
 function Boards({ boards, onBoardCreated }) {
@@ -30,7 +31,7 @@ function Boards({ boards, onBoardCreated }) {
     setCreating(true);
     try {
       const payload = { ...newBoard, createdBy: auth.currentUser?.uid };
-      const res = await fetch('http://localhost:3000/api/boards', {
+      const res = await fetch('${API_URL}/api/boards', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -52,7 +53,7 @@ function Boards({ boards, onBoardCreated }) {
     if (!editBoardData.name) return;
     setCreating(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/boards/${editBoardData.id}`, {
+      const res = await fetch(`${API_URL}/api/boards/${editBoardData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editBoardData)
@@ -74,7 +75,7 @@ function Boards({ boards, onBoardCreated }) {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this board?")) return;
     try {
-      await fetch(`http://localhost:3000/api/boards/${id}`, { method: 'DELETE' });
+      await fetch(`${API_URL}/api/boards/${id}`, { method: 'DELETE' });
       onBoardCreated();
     } catch (err) {
       console.error(err);

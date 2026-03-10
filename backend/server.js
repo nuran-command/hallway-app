@@ -97,8 +97,10 @@ const onlineUsers = new Map(); // userId → socketId
 app.get('/api/boards', async (req, res) => {
   try {
     const snapshot = await db.collection('boards').get();
-    let boards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    // If no boards, Return empty or default
+    let boards = snapshot.docs.map(doc => ({
+      id: String(doc.id).trim(),
+      ...doc.data()
+    }));
     res.json(boards);
   } catch (err) {
     console.error("GET /api/boards Error:", err);
@@ -508,4 +510,7 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(PORT, () => console.log(`✅ HallWay server running on Port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`🚀 REAL HallWay Backend started on Port ${PORT}`);
+  console.log(`📅 Startup Time: ${new Date().toISOString()}`);
+});

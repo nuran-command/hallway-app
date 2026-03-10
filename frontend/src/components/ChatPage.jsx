@@ -39,8 +39,9 @@ export default function ChatPage({ socket }) {
         if (!activeFriend || !currentUser) return;
         setLoading(true);
         fetch(`${API_URL}/api/messages/${currentUser.uid}/${activeFriend.id}`)
-            .then(r => r.json())
-            .then(data => { setMessages(data); setLoading(false); });
+            .then(r => r.ok ? r.json() : [])
+            .then(data => { setMessages(Array.isArray(data) ? data : []); setLoading(false); })
+            .catch(e => { console.error("Chat Fetch Fail:", e); setLoading(false); });
     }, [activeFriend]);
 
     useEffect(() => {

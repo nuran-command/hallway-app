@@ -82,7 +82,7 @@ const bucket = admin.storage().bucket();
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',')
-    : ["http://localhost:5173", "http://localhost:3000"]
+    : ["http://localhost:5173", "http://localhost:3000", "https://hallway-app.onrender.com", "https://my-student-network-backend.web.app"]
 }));
 app.use(express.json());
 
@@ -204,6 +204,7 @@ app.post('/api/posts/:id/like', async (req, res) => {
       }
     }
     await postRef.update({ likes });
+    io.emit('like_updated', { postId, likes });
     res.json({ likes });
   } catch (err) {
     console.error("LIKE Error:", err);
@@ -228,6 +229,9 @@ app.post('/api/posts/:id/comment', async (req, res) => {
     await postRef.update({
       comments: admin.firestore.FieldValue.arrayUnion(comment)
     });
+
+    // Notify client of new comment
+    io.emit('comment_added', { postId, comment });
 
     if (postDoc.data().userId !== userId) {
       const notif = {
@@ -259,9 +263,19 @@ app.put('/api/posts/:id', async (req, res) => {
 app.delete('/api/posts/:id', async (req, res) => {
   try {
     await db.collection('posts').doc(req.params.id).delete();
+    io.emit('post_deleted', req.params.id);
     res.json({ success: true });
   } catch (err) {
     console.error("DELETE Post Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/notifications/:id/clear', async (req, res) => {
+  try {
+    await db.collection('notifications').doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

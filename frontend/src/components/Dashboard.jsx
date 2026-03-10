@@ -126,7 +126,7 @@ export default function Dashboard({ socket, boards }) {
                           <strong>{post.displayName || (post.userEmail ? post.userEmail.split('@')[0] : "Anonymous")}</strong>
                         </Link>
                         <span>posted on <Link to={`/board/${post.boardId}`} onClick={(e) => e.stopPropagation()}>
-                          {boards?.find(b => String(b.id) === String(post.boardId))?.name || `Board #${post.boardId}`}
+                          {boards?.find(b => String(b.id).trim() === String(post.boardId).trim())?.name || `Board #${post.boardId}`}
                         </Link></span>
                       </div>
                       <p>{post.text}</p>

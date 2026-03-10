@@ -58,9 +58,24 @@ function BoardPage({ socket, boards }) {
       }
     });
 
+    socket.on('post_deleted', (postId) => {
+      setPosts(prev => prev.filter(p => String(p.id) === String(postId) ? false : true));
+    });
+
+    socket.on('like_updated', ({ postId, likes }) => {
+      setPosts(prev => prev.map(p => String(p.id) === String(postId) ? { ...p, likes } : p));
+    });
+
+    socket.on('comment_added', ({ postId, comment }) => {
+      setPosts(prev => prev.map(p => String(p.id) === String(postId) ? { ...p, comments: [...(p.comments || []), comment] } : p));
+    });
+
     return () => {
       socket.off('new_post');
       socket.off('user_typing');
+      socket.off('post_deleted');
+      socket.off('like_updated');
+      socket.off('comment_added');
     };
   }, [id, socket, auth.currentUser]);
 
@@ -200,11 +215,11 @@ function BoardPage({ socket, boards }) {
           <FaArrowLeft /> Back to Boards
         </Link>
         <div className="header-flex">
-          <h2><FaHashtag /> <span>{boards?.find(b => String(b.id) === String(id))?.name || `Board #${id}`}</span></h2>
+          <h2><FaHashtag /> <span>{boards?.find(b => String(b.id).trim() === String(id).trim())?.name || `Board #${id}`}</span></h2>
           {typingUser && <div className="typing-indicator">{typingUser} is typing...</div>}
         </div>
         <p style={{ color: '#64748b', marginTop: '8px' }}>
-          {boards?.find(b => String(b.id) === String(id))?.description || 'Join the discussion'}
+          {boards?.find(b => String(b.id).trim() === String(id).trim())?.description || 'Join the discussion'}
         </p>
       </div>
 

@@ -149,7 +149,7 @@ export default function Dashboard({ socket, boards }) {
               <FaUsers className="header-icon" />
             </div>
             <div className="vertical-grid">
-              {friends.length === 0 ? (
+              {!Array.isArray(friends) || friends.length === 0 ? (
                 <div className="card miniature" style={{ padding: '16px', textAlign: 'center', opacity: 0.6 }}>
                   <p style={{ fontSize: '0.8rem' }}>No friends yet. Add peers to see their status!</p>
                 </div>

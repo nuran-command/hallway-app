@@ -39,6 +39,10 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
 } else {
   try {
     serviceAccount = require('./serviceAccountKey.json');
+    // Ensure the key is fixed even when loaded from local file
+    if (serviceAccount && serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
   } catch (e) {
     console.error("CRITICAL: serviceAccountKey.json not found and FIREBASE_SERVICE_ACCOUNT env var is missing.");
   }

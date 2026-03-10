@@ -94,8 +94,14 @@ export default function App() {
 
 
   React.useEffect(() => {
-    fetch(`${API_URL}/api/ping`).then(r => r.json()).then(d => console.log("API Status:", d)).catch(e => console.error("API DOWN:", e));
-    fetchBoards();
+    // Delay initial fetch slightly on localhost to give the backend time to start up
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const delay = isLocal ? 1500 : 0;
+
+    setTimeout(() => {
+      fetch(`${API_URL}/api/ping`).then(r => r.json()).then(d => console.log("API Status:", d)).catch(e => console.log("API Starting up..."));
+      fetchBoards();
+    }, delay);
 
     if (socket) {
       socket.on('board_created', fetchBoards);

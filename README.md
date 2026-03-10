@@ -1,4 +1,4 @@
-# HallWay 🏫
+# HallWay 
 
 > **The social network for university students.** Connect with peers, join discussions, share moments, and grow together — all in one place.
 
@@ -10,26 +10,26 @@
 
 ---
 
-## ✨ Features
+##  Features
 
 | Feature | Description |
 |---|---|
-| 🔐 **Authentication** | Email/password sign-in & sign-up via Firebase Auth |
-| 🧑‍🤝‍🧑 **Friend System** | Send, accept, and manage friend requests with real-time notifications |
-| 📋 **Discussion Boards** | Create, edit, and delete community boards by category |
-| 📝 **Posts** | Create rich posts with text & image uploads (Firebase Storage); edit and delete your own |
-| 👍 **Likes & Comments** | Interact with community posts; post owners get real-time notifications |
-| 💬 **Direct Messages** | Real-time private chat between friends via Socket.IO |
-| 🔔 **Notifications** | Bell panel with typed alerts: friend requests, likes, comments, messages |
-| 👤 **Profile Page** | Avatar upload, bio editing, activity stats + XP/Level gamification system |
-| 🎮 **Gamification** | XP points, 5-tier level system (Explorer → HallWay Master), earned badges |
-| ⚙️ **Settings** | Change display name, password, notification preferences, theme, language |
-| 🌙 **Dark Mode** | Toggle between light and dark themes, persisted across sessions |
-| 💾 **Data Persistence** | All data saved to JSON files — survives server restarts |
+|  **Authentication** | Email/password sign-in & sign-up via Firebase Auth |
+|  **Friend System** | Send, accept, and manage friend requests with real-time notifications |
+|  **Discussion Boards** | Create, edit, and delete community boards by category |
+|  **Posts** | Create rich posts with text & image uploads (Firebase Storage); edit and delete your own |
+|  **Likes & Comments** | Interact with community posts; post owners get real-time notifications |
+|  **Direct Messages** | Real-time private chat between friends via Socket.IO |
+|  **Notifications** | Bell panel with typed alerts: friend requests, likes, comments, messages |
+|  **Profile Page** | Avatar upload, bio editing, activity stats + XP/Level gamification system |
+|  **Gamification** | XP points, 5-tier level system (Explorer → HallWay Master), earned badges |
+|  **Settings** | Change display name, password, notification preferences, theme, language |
+|  **Dark Mode** | Toggle between light and dark themes, persisted across sessions |
+|  **Data Persistence** | All data saved to JSON files — survives server restarts |
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **React 18** + **React Router v6** — SPA navigation
@@ -47,7 +47,7 @@
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 StudentNetwork/
@@ -76,14 +76,14 @@ StudentNetwork/
 │
 ├── backend/
 │   ├── server.js                       # Express + Socket.IO server
-│   ├── data/                           # 🔒 Auto-created, gitignored JSON DB files
+│   ├── data/                           #  Auto-created, gitignored JSON DB files
 │   │   ├── boards.json
 │   │   ├── posts.json
 │   │   ├── friendships.json
 │   │   ├── notifications.json
 │   │   ├── users.json
 │   │   └── messages.json
-│   ├── serviceAccountKey.json          # 🔒 Firebase Admin key (gitignored)
+│   ├── serviceAccountKey.json          #  Firebase Admin key (gitignored)
 │   └── package.json
 │
 ├── package.json                        # Root scripts (npm run dev)
@@ -92,7 +92,7 @@ StudentNetwork/
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Node.js 18+
@@ -188,7 +188,7 @@ Open **http://localhost:5173** in your browser.
 
 ---
 
-## 🎮 Gamification
+##  Gamification
 
 Students earn XP from their activity:
 
@@ -201,15 +201,15 @@ Students earn XP from their activity:
 
 | Level | XP Required |
 |---|---|
-| 🔍 Explorer | 0 |
-| ✍️ Contributor | 100 |
-| 📚 Scholar | 300 |
-| 🏆 Legend | 700 |
-| 👑 HallWay Master | 1500+ |
+|  Explorer | 0 |
+|  Contributor | 100 |
+|  Scholar | 300 |
+|  Legend | 700 |
+|  HallWay Master | 1500+ |
 
 ---
 
-## 🔒 Security Notes
+##  Security Notes
 
 - `backend/serviceAccountKey.json` is **gitignored** — never commit this file
 - `backend/data/` is **gitignored** — contains user data, should not be in version control
@@ -218,36 +218,6 @@ Students earn XP from their activity:
 
 ---
 
-## 🚀 Deployment
-
-### Backend (Render / Railway)
-1. Push code to GitHub
-2. Create a new Web Service and connect your repo
-3. Set **Build Command**: `npm install`
-4. Set **Start Command**: `node backend/server.js`
-5. Add environment secret: upload `serviceAccountKey.json` as a secret file or use environment variables
-6. The `backend/data/` directory will be created on first run on the server
-
-### Frontend (Vercel / Netlify)
-1. Set **Root Directory** to `frontend`
-2. Set **Build Command**: `npm run build`
-3. Set **Output Directory**: `dist`
-4. Update the `http://localhost:3000` backend URLs in frontend code to your deployed backend URL (or use a `.env` variable: `VITE_API_URL`)
-
-> **Tip:** For a production server, replace the JSON file storage with a proper database (Firestore, MongoDB, or PostgreSQL) for scalability.
-
----
-
-## 🤝 Contributing
-
-1. Fork the repo
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit: `git commit -m "feat: add my feature"`
-4. Push: `git push origin feature/my-feature`
-5. Open a Pull Request
-
----
-
-## 📄 License
+##  License
 
 MIT © 2026 HallWay Team
